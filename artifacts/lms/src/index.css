@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --font-sans: var(--font-body);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: 220 20% 97%;
+  --foreground: 225 50% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 225 50% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 225 50% 15%;
+  --primary: 228 60% 24%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 20% 94%;
+  --secondary-foreground: 225 50% 15%;
+  --muted: 220 15% 92%;
+  --muted-foreground: 220 10% 46%;
+  --accent: 345 85% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 15% 88%;
+  --input: 220 15% 88%;
+  --ring: 228 60% 24%;
+  --radius: 0.5rem;
+  --sidebar-background: 228 60% 24%;
+  --sidebar-foreground: 220 30% 85%;
+  --sidebar-primary: 345 85% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 228 55% 30%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 228 50% 32%;
+  --sidebar-ring: 345 85% 50%;
+  --sidebar-muted: 228 40% 40%;
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+  --info: 210 100% 50%;
+  --info-foreground: 0 0% 100%;
+  --font-display: 'Poppins', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+.dark {
+  --background: 225 50% 8%;
+  --foreground: 220 20% 92%;
+  --card: 225 45% 12%;
+  --card-foreground: 220 20% 92%;
+  --popover: 225 45% 12%;
+  --popover-foreground: 220 20% 92%;
+  --primary: 220 80% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 225 40% 18%;
+  --secondary-foreground: 220 20% 92%;
+  --muted: 225 35% 16%;
+  --muted-foreground: 220 15% 55%;
+  --accent: 345 85% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 225 35% 20%;
+  --input: 225 35% 20%;
+  --ring: 220 80% 60%;
+  --sidebar-background: 228 55% 14%;
+  --sidebar-foreground: 220 30% 80%;
+  --sidebar-primary: 345 85% 55%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 228 50% 22%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 228 45% 22%;
+  --sidebar-ring: 345 85% 55%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .sidebar-nav-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer text-sm font-medium;
+  }
+
+  .sidebar-nav-item-active {
+    @apply bg-sidebar-accent text-sidebar-accent-foreground;
+  }
+
+  .stat-card {
+    @apply bg-card rounded-xl border shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .search-highlight {
+    @apply bg-accent/20 text-accent font-semibold rounded px-1;
+  }
+
+  .col-num {
+    @apply text-center;
+  }
+
+  .page-header {
+    @apply text-xl md:text-2xl font-bold text-foreground tracking-tight;
+    font-family: var(--font-display);
+  }
+}
+
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled,
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+body[style*="font-size: 1.125rem"],
+body[style*="font-size: 1.5rem"],
+body[style*="font-size: 1.75rem"] {
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+body[style*="letter-spacing: 0.05em"],
+body[style*="letter-spacing: 0.1em"] {
+  word-spacing: 0.1em;
+  line-height: 1.6;
+}
+
+body[style*="transform: scale"] {
+  transform-origin: top left;
+}
+
+body.magnifier-active *:hover {
+  font-size: 1.2em !important;
+  background-color: rgba(255, 255, 0, 0.1) !important;
+  padding: 2px 4px !important;
+}
+
+body[style*="font-size: 1.125rem"] .card,
+body[style*="font-size: 1.5rem"] .card,
+body[style*="font-size: 1.75rem"] .card {
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+body[style*="font-size: 1.125rem"] p,
+body[style*="font-size: 1.125rem"] span,
+body[style*="font-size: 1.125rem"] label,
+body[style*="font-size: 1.5rem"] p,
+body[style*="font-size: 1.5rem"] span,
+body[style*="font-size: 1.5rem"] label,
+body[style*="font-size: 1.75rem"] p,
+body[style*="font-size: 1.75rem"] span,
+body[style*="font-size: 1.75rem"] label {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
