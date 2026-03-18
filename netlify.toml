@@ -1,10 +1,10 @@
 [build]
   base    = "artifacts/lms"
-  command = "pnpm run build"
-  publish = "dist/public"
+  command = "pnpm install --ignore-scripts && pnpm run build"
+  publish = "artifacts/lms/dist/public"
 
 [build.environment]
-  BASE_PATH = "/"
+  BASE_PATH    = "/"
   NODE_VERSION = "20"
 
 [[redirects]]
