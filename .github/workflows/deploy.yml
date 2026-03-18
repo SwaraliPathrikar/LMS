@@ -37,7 +37,7 @@ jobs:
       - name: Build
         run: pnpm --filter @workspace/lms run build
         env:
-          BASE_PATH: /
+          BASE_PATH: /LMS/
           PORT: 22419
 
       - uses: actions/configure-pages@v4
