@@ -110,16 +110,104 @@ export const books: Book[] = [
 ];
 
 export const bookInventory: BookInventory[] = [
+  // b1 – The Discovery of India
   { bookId: 'b1', libraryId: 'lib1', totalCount: 20, availableCount: 11, returningIn2Days: 4 },
   { bookId: 'b1', libraryId: 'lib2', totalCount: 15, availableCount: 8, returningIn2Days: 2 },
   { bookId: 'b1', libraryId: 'lib3', totalCount: 10, availableCount: 5, returningIn2Days: 3 },
+  // b2 – Wings of Fire
   { bookId: 'b2', libraryId: 'lib1', totalCount: 25, availableCount: 18, returningIn2Days: 3 },
   { bookId: 'b2', libraryId: 'lib2', totalCount: 12, availableCount: 4, returningIn2Days: 5 },
+  // b3 – Malgudi Days
   { bookId: 'b3', libraryId: 'lib1', totalCount: 8, availableCount: 3, returningIn2Days: 1 },
+  { bookId: 'b3', libraryId: 'lib2', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  // b4 – Introduction to Algorithms
   { bookId: 'b4', libraryId: 'lib5', totalCount: 5, availableCount: 2, returningIn2Days: 1 },
+  { bookId: 'b4', libraryId: 'lib1', totalCount: 4, availableCount: 3, returningIn2Days: 0 },
+  // b5 – Arthashastra
   { bookId: 'b5', libraryId: 'lib1', totalCount: 12, availableCount: 7, returningIn2Days: 2 },
+  { bookId: 'b5', libraryId: 'lib3', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
+  // b6 – Constitution of India
   { bookId: 'b6', libraryId: 'lib6', totalCount: 30, availableCount: 22, returningIn2Days: 3 },
+  { bookId: 'b6', libraryId: 'lib1', totalCount: 20, availableCount: 14, returningIn2Days: 2 },
+  // b7 – Yoga Sutras
   { bookId: 'b7', libraryId: 'lib1', totalCount: 10, availableCount: 6, returningIn2Days: 2 },
+  { bookId: 'b7', libraryId: 'lib3', totalCount: 7, availableCount: 5, returningIn2Days: 1 },
+  // b8 – Digital India
+  { bookId: 'b8', libraryId: 'lib5', totalCount: 6, availableCount: 4, returningIn2Days: 1 },
+  { bookId: 'b8', libraryId: 'lib1', totalCount: 5, availableCount: 3, returningIn2Days: 0 },
+  // b9 – The God of Small Things
+  { bookId: 'b9', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b9', libraryId: 'lib2', totalCount: 8, availableCount: 5, returningIn2Days: 2 },
+  // b10 – Midnight's Children
+  { bookId: 'b10', libraryId: 'lib1', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
+  { bookId: 'b10', libraryId: 'lib3', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  // b11 – A Brief History of Time
+  { bookId: 'b11', libraryId: 'lib1', totalCount: 12, availableCount: 8, returningIn2Days: 2 },
+  { bookId: 'b11', libraryId: 'lib5', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  // b12 – Sapiens
+  { bookId: 'b12', libraryId: 'lib1', totalCount: 15, availableCount: 10, returningIn2Days: 3 },
+  { bookId: 'b12', libraryId: 'lib2', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  // b13 – The Selfish Gene
+  { bookId: 'b13', libraryId: 'lib1', totalCount: 7, availableCount: 5, returningIn2Days: 1 },
+  { bookId: 'b13', libraryId: 'lib5', totalCount: 5, availableCount: 3, returningIn2Days: 0 },
+  // b14 – Thinking, Fast and Slow
+  { bookId: 'b14', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 2 },
+  { bookId: 'b14', libraryId: 'lib2', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
+  // b15 – The Lean Startup
+  { bookId: 'b15', libraryId: 'lib1', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b15', libraryId: 'lib5', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  // b16 – Atomic Habits
+  { bookId: 'b16', libraryId: 'lib1', totalCount: 15, availableCount: 11, returningIn2Days: 2 },
+  { bookId: 'b16', libraryId: 'lib2', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b16', libraryId: 'lib3', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
+  // b17 – The Art of Computer Programming
+  { bookId: 'b17', libraryId: 'lib5', totalCount: 4, availableCount: 3, returningIn2Days: 0 },
+  { bookId: 'b17', libraryId: 'lib1', totalCount: 3, availableCount: 2, returningIn2Days: 0 },
+  // b18 – Clean Code
+  { bookId: 'b18', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b18', libraryId: 'lib5', totalCount: 8, availableCount: 5, returningIn2Days: 2 },
+  // b19 – The Pragmatic Programmer
+  { bookId: 'b19', libraryId: 'lib1', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b19', libraryId: 'lib5', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  // b20 – Design Patterns
+  { bookId: 'b20', libraryId: 'lib5', totalCount: 5, availableCount: 3, returningIn2Days: 1 },
+  { bookId: 'b20', libraryId: 'lib1', totalCount: 4, availableCount: 3, returningIn2Days: 0 },
+  // b21–b50: government/digital resources — physical copies at lib1 & lib6
+  { bookId: 'b21', libraryId: 'lib6', totalCount: 10, availableCount: 8, returningIn2Days: 1 },
+  { bookId: 'b22', libraryId: 'lib6', totalCount: 8, availableCount: 6, returningIn2Days: 0 },
+  { bookId: 'b23', libraryId: 'lib5', totalCount: 5, availableCount: 4, returningIn2Days: 0 },
+  { bookId: 'b24', libraryId: 'lib6', totalCount: 12, availableCount: 10, returningIn2Days: 1 },
+  { bookId: 'b25', libraryId: 'lib1', totalCount: 6, availableCount: 5, returningIn2Days: 0 },
+  { bookId: 'b26', libraryId: 'lib5', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b27', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 2 },
+  { bookId: 'b27', libraryId: 'lib3', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b28', libraryId: 'lib1', totalCount: 12, availableCount: 9, returningIn2Days: 1 },
+  { bookId: 'b28', libraryId: 'lib3', totalCount: 8, availableCount: 6, returningIn2Days: 0 },
+  { bookId: 'b29', libraryId: 'lib1', totalCount: 15, availableCount: 11, returningIn2Days: 2 },
+  { bookId: 'b29', libraryId: 'lib2', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b30', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b31', libraryId: 'lib1', totalCount: 6, availableCount: 4, returningIn2Days: 1 },
+  { bookId: 'b32', libraryId: 'lib1', totalCount: 8, availableCount: 6, returningIn2Days: 0 },
+  { bookId: 'b32', libraryId: 'lib3', totalCount: 6, availableCount: 4, returningIn2Days: 1 },
+  { bookId: 'b33', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b33', libraryId: 'lib5', totalCount: 8, availableCount: 5, returningIn2Days: 2 },
+  { bookId: 'b34', libraryId: 'lib1', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b35', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b36', libraryId: 'lib6', totalCount: 15, availableCount: 12, returningIn2Days: 1 },
+  { bookId: 'b37', libraryId: 'lib6', totalCount: 10, availableCount: 8, returningIn2Days: 0 },
+  { bookId: 'b38', libraryId: 'lib6', totalCount: 8, availableCount: 6, returningIn2Days: 0 },
+  { bookId: 'b39', libraryId: 'lib6', totalCount: 10, availableCount: 8, returningIn2Days: 1 },
+  { bookId: 'b40', libraryId: 'lib6', totalCount: 12, availableCount: 9, returningIn2Days: 1 },
+  { bookId: 'b41', libraryId: 'lib6', totalCount: 8, availableCount: 6, returningIn2Days: 0 },
+  { bookId: 'b42', libraryId: 'lib6', totalCount: 6, availableCount: 5, returningIn2Days: 0 },
+  { bookId: 'b43', libraryId: 'lib6', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b44', libraryId: 'lib6', totalCount: 10, availableCount: 8, returningIn2Days: 0 },
+  { bookId: 'b45', libraryId: 'lib6', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b46', libraryId: 'lib6', totalCount: 10, availableCount: 8, returningIn2Days: 0 },
+  { bookId: 'b47', libraryId: 'lib6', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b48', libraryId: 'lib6', totalCount: 10, availableCount: 8, returningIn2Days: 0 },
+  { bookId: 'b49', libraryId: 'lib1', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  { bookId: 'b50', libraryId: 'lib1', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
 ];
 
 export const members: Member[] = [

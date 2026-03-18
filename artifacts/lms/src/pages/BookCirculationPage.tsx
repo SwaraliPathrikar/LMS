@@ -35,10 +35,10 @@ export default function BookCirculationPage() {
   const [scannerStatus, setScannerStatus] = useState<string>('');
   const scannerRef = useRef<any>(null);
   const scannerDivRef = useRef<HTMLDivElement>(null);
+  const handleBarcodeScanRef = useRef<(barcode: string) => void>(() => {});
 
   const stopScanner = () => {
     if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
       scannerRef.current.clear().catch(() => {});
       scannerRef.current = null;
     }
@@ -48,8 +48,8 @@ export default function BookCirculationPage() {
 
   const handleBarcodeScan = (barcode: string) => {
     stopScanner();
-    // Try to find the book by ISBN (barcode) in the current library
-    const found = libraryBooks.find(
+    // Search all books (not just available ones) to avoid stale-closure on libraryBooks memo
+    const found = books.find(
       (b: any) => b.isbn === barcode || b.id === barcode
     );
     if (found) {
@@ -58,18 +58,24 @@ export default function BookCirculationPage() {
       const inventory = bookInventory.find(
         (inv: any) => inv.bookId === found.id && inv.libraryId === selectedLibrary
       );
-      if (!inventory || inventory.availableCount <= 0) {
+      if (!inventory) {
+        // Book exists in system but not stocked at this library
         setScannerStatus('unavailable');
-        toast({ title: 'Book Unavailable', description: `"${found.title}" is currently not available for issue.`, variant: 'destructive' });
+        toast({ title: 'Not Available Here', description: `"${found.title}" is not stocked at this library branch.`, variant: 'destructive' });
+      } else if (inventory.availableCount <= 0) {
+        setScannerStatus('unavailable');
+        toast({ title: 'Book Unavailable', description: `"${found.title}" has no copies available right now.`, variant: 'destructive' });
       } else {
         setScannerStatus('available');
-        toast({ title: 'Book Found', description: `"${found.title}" by ${found.author} is available.` });
+        toast({ title: 'Book Found', description: `"${found.title}" by ${found.author} — ${inventory.availableCount} copies available.` });
       }
     } else {
       setScannerStatus('not-found');
       toast({ title: 'Book Not Found', description: `No book found with barcode: ${barcode}`, variant: 'destructive' });
     }
   };
+  // Keep ref in sync so the scanner effect always calls the latest version
+  handleBarcodeScanRef.current = handleBarcodeScan;
 
   useEffect(() => {
     if (!showScanner || !scannerDivRef.current) return;
@@ -81,7 +87,7 @@ export default function BookCirculationPage() {
         false
       );
       html5QrCode.render(
-        (decodedText: string) => { handleBarcodeScan(decodedText); },
+        (decodedText: string) => { handleBarcodeScanRef.current(decodedText); },
         () => { /* ignore per-frame errors */ }
       );
       scannerRef.current = html5QrCode;
@@ -90,7 +96,6 @@ export default function BookCirculationPage() {
     });
     return () => {
       if (html5QrCode) {
-        html5QrCode.stop().catch(() => {});
         html5QrCode.clear().catch(() => {});
       }
     };

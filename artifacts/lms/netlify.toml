@@ -1,0 +1,13 @@
+[build]
+  base    = "artifacts/lms"
+  command = "pnpm run build"
+  publish = "dist/public"
+
+[build.environment]
+  BASE_PATH = "/"
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
