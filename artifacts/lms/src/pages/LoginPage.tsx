@@ -58,7 +58,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img src="logo1.png" alt="Library Logo" className="h-16 w-auto max-w-xs object-contain" />
+            <img src="logo1.png" alt="Library Logo" className="h-14 w-auto max-w-xs object-contain block" />
           </div>
           <h1 className="text-3xl font-bold text-primary-foreground" style={{ fontFamily: 'var(--font-display)' }}>
             Library Management System
@@ -103,7 +103,7 @@ export default function LoginPage() {
               {/* Error Message */}
               {error && (
                 <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-2">
-                  <AlertCircle size={16} className="text-destructive flex-shrink-0 mt-0.5" />
+                  <AlertCircle size={16} className="text-destructive shrink-0 mt-0.5" />
                   <p className="text-sm text-destructive">{error}</p>
                 </div>
               )}

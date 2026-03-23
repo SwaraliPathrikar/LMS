@@ -1,8 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy LMS to GitHub Pages
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,14 +20,18 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
@@ -34,17 +39,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts
 
-      - name: Build
-        run: pnpm --filter @workspace/lms run build
-        env:
-          BASE_PATH: /LMS/
-          PORT: 22419
+      - name: Build LMS for GitHub Pages
+        run: pnpm --filter @workspace/lms exec vite build --config vite.config.ghpages.ts --base /LMS/
+        working-directory: .
 
-      - uses: actions/configure-pages@v4
+      - name: Add 404.html for SPA routing
+        run: cp artifacts/lms/dist/public/index.html artifacts/lms/dist/public/404.html
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: artifacts/lms/dist/public
 
-      - uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
         id: deployment
+        uses: actions/deploy-pages@v4

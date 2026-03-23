@@ -94,7 +94,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+      <BrowserRouter basename={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
         <ErrorBoundary>
           <AuthProvider>
             <BooksProvider>

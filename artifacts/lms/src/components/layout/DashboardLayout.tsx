@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Sidebar — always visible on desktop, drawer on mobile */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-72 lg:w-72 md:w-60 transform transition-transform duration-300 ease-in-out
         md:relative md:translate-x-0 md:z-auto md:flex md:flex-shrink-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-6 lg:p-8 max-w-7xl pb-12">
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto pb-16 w-full">
             {children}
           </div>
         </main>

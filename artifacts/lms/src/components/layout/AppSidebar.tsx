@@ -144,12 +144,16 @@ export default function AppSidebar({ onClose }: AppSidebarProps) {
   };
 
   return (
-    <aside className="w-72 h-full bg-sidebar flex flex-col border-r border-sidebar-border overflow-hidden">
+    <aside className="w-full h-full bg-sidebar flex flex-col border-r border-sidebar-border overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-3 mb-2">
-          <img src="logo1.png" alt="Library Logo" className="h-8 w-auto object-contain" />
-          <h1 className="text-xl font-bold text-sidebar-primary-foreground" style={{ fontFamily: 'var(--font-display)' }}>
+      <div className="p-4 md:p-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-2 md:gap-3 mb-1">
+          <img
+            src="logo1.png"
+            alt="Library Logo"
+            className="h-7 md:h-8 w-auto object-contain block shrink-0 max-w-[110px]"
+          />
+          <h1 className="text-base md:text-xl font-bold text-sidebar-primary-foreground leading-none" style={{ fontFamily: 'var(--font-display)' }}>
             Library Management
           </h1>
         </div>

@@ -3,12 +3,10 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
+// Dedicated config for GitHub Pages builds — no PORT/BASE_PATH env vars required.
+// BASE_URL is set via --base flag in the build command.
 export default defineConfig({
-  base: "/",
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
@@ -20,15 +18,5 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-  },
-  server: {
-    host: true,
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
-    },
-  },
-  preview: {
-    host: true,
   },
 });
