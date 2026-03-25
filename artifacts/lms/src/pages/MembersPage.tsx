@@ -1,7 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { members, libraryBranches } from '@/data/mockData';
+import { members, libraryBranches, circulationTransactions, fines } from '@/data/mockData';
+
+// Live helpers
+const getMemberBorrowed = (memberId: string) =>
+  circulationTransactions.filter(t => t.memberId === memberId && (t.status === 'issued' || t.status === 'overdue')).length;
+
+const getMemberFinesDue = (memberId: string) =>
+  fines.filter(f => f.memberId === memberId && f.status === 'pending').reduce((s, f) => s + f.amount, 0);
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -30,9 +37,6 @@ export default function MembersPage() {
   return <AdminMembersPage />;
 }
 
-// ============================================================================
-// ACCESS DENIED - Citizens cannot view members
-// ============================================================================
 
 function AccessDenied() {
   return (
@@ -51,9 +55,6 @@ function AccessDenied() {
   );
 }
 
-// ============================================================================
-// LIBRARIAN MEMBERS PAGE - Members of their library only
-// ============================================================================
 
 function LibrarianMembersPage() {
   const { selectedLibrary } = useAuth();
@@ -72,7 +73,7 @@ function LibrarianMembersPage() {
 
   const active = libraryMembers.filter(m => m.status === 'active').length;
   const expired = libraryMembers.filter(m => m.status === 'expired').length;
-  const totalFines = libraryMembers.reduce((s, m) => s + m.finesDue, 0);
+  const totalFines = libraryMembers.reduce((s, m) => s + getMemberFinesDue(m.id), 0);
 
   const selectedBranch = libraryBranches.find(b => b.id === selectedLibrary);
 
@@ -184,8 +185,8 @@ function LibrarianMembersPage() {
                               {m.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-sm">{m.borrowedBooks}</TableCell>
-                          <TableCell className="col-num text-sm">{m.finesDue > 0 ? <span className="text-warning font-semibold">₹{m.finesDue}</span> : '—'}</TableCell>
+                          <TableCell className="text-sm">{getMemberBorrowed(m.id)}</TableCell>
+                          <TableCell className="col-num text-sm">{getMemberFinesDue(m.id) > 0 ? <span className="text-warning font-semibold">₹{getMemberFinesDue(m.id)}</span> : '—'}</TableCell>
                         </TableRow>
                       ))
                     ) : (
@@ -221,7 +222,7 @@ function AdminMembersPage() {
 
   const active = members.filter(m => m.status === 'active').length;
   const expired = members.filter(m => m.status === 'expired').length;
-  const totalFines = members.reduce((s, m) => s + m.finesDue, 0);
+  const totalFines = members.reduce((s, m) => s + getMemberFinesDue(m.id), 0);
 
   return (
     <DashboardLayout>
@@ -324,8 +325,8 @@ function AdminMembersPage() {
                             {m.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">{m.borrowedBooks}</TableCell>
-                        <TableCell className="text-sm">{m.finesDue > 0 ? <span className="text-warning font-semibold">₹{m.finesDue}</span> : '—'}</TableCell>
+                        <TableCell className="text-sm">{getMemberBorrowed(m.id)}</TableCell>
+                        <TableCell className="text-sm">{getMemberFinesDue(m.id) > 0 ? <span className="text-warning font-semibold">₹{getMemberFinesDue(m.id)}</span> : '—'}</TableCell>
                       </TableRow>
                     );
                   })

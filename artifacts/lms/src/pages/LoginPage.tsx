@@ -24,7 +24,7 @@ const demoCredentials = {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('citizen');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img src="logo1.png" alt="Library Logo" className="h-14 w-auto max-w-xs object-contain block" />
+            <img src="/lms/logo1.png" alt="Library Logo" className="h-14 w-auto max-w-xs object-contain block rounded-xl" />
           </div>
           <h1 className="text-3xl font-bold text-primary-foreground" style={{ fontFamily: 'var(--font-display)' }}>
             Library Management System

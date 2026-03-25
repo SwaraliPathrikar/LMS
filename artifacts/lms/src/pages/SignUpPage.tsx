@@ -111,7 +111,7 @@ export default function SignUpPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img src="logo1.png" alt="Library Logo" className="h-14 w-auto max-w-xs object-contain block" />
+            <img src="/lms/logo1.png" alt="Library Logo" className="h-14 w-auto max-w-xs object-contain block rounded-xl" />
           </div>
           <h1 className="text-3xl font-bold text-primary-foreground" style={{ fontFamily: 'var(--font-display)' }}>
             Citizen Registration

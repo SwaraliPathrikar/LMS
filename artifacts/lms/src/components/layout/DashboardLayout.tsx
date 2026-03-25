@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen bg-background">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { libraryBranches, members, circulationTransactions, getLibraryMetrics, getAllLibrariesMetrics, getAggregatedMetrics, getOverborrowedBooks, getOverborrowedBooksCount, getOverbookedCount, getOverbookedMembers, getOverdueAnalytics, getFinesAnalytics, getActiveUsersAnalytics, getNewMembersAnalytics, getOnTimeReturnRate, getAvgBorrowDuration, getBookUtilizationRate, getTop5BorrowedBooks, getLowStockAlerts, getPeakUsageTime, getDashboardAlerts } from '@/data/mockData';
+import { libraryBranches, members, circulationTransactions, fines, getLibraryMetrics, getAllLibrariesMetrics, getAggregatedMetrics, getOverborrowedBooks, getOverborrowedBooksCount, getOverDemandBooks, getOverDemandCount, getOverbookedCount, getOverbookedMembers, getOverdueAnalytics, getFinesAnalytics, getActiveUsersAnalytics, getNewMembersAnalytics, getOnTimeReturnRate, getAvgBorrowDuration, getBookUtilizationRate, getTop5BorrowedBooks, getLowStockAlerts, getPeakUsageTime, getDashboardAlerts } from '@/data/mockData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -31,15 +31,30 @@ export default function Dashboard() {
 function CitizenDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [showUtilizationDialog, setShowUtilizationDialog] = useState(false);
 
-  const citizenStats = {
-    borrowedBooks: 3,
-    overdueBooks: 1,
-    finesDue: 50,
-    membershipStatus: 'active',
-    membershipExpiry: '2025-06-15',
-    upcomingDueDate: '2026-03-25',
-  };
+  const citizenStats = useMemo(() => {
+    const myTransactions = circulationTransactions.filter(t => t.memberId === user?.id);
+    const borrowedBooks = myTransactions.filter(t => t.status === 'issued' || t.status === 'overdue').length;
+    const overdueBooks = myTransactions.filter(t => t.status === 'overdue').length;
+    const finesDue = fines.filter(f => f.memberId === user?.id && f.status === 'pending').reduce((s, f) => s + f.amount, 0);
+    const member = members.find(m => m.id === user?.id);
+    const upcomingDue = myTransactions
+      .filter(t => t.status === 'issued' || t.status === 'overdue')
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0]?.dueDate || '—';
+    const myLibraryId = member?.libraryId;
+    const libraryMetrics = myLibraryId ? getLibraryMetrics(myLibraryId) : null;
+    return {
+      borrowedBooks,
+      overdueBooks,
+      finesDue,
+      membershipStatus: member?.status || 'active',
+      membershipExpiry: member?.expiryDate || '—',
+      upcomingDueDate: upcomingDue,
+      myTransactions,
+      libraryMetrics,
+    };
+  }, [user?.id]);
 
   // Get unread notifications for the citizen
   const unreadNotifications = useMemo(() => {
@@ -118,7 +133,64 @@ function CitizenDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {citizenStats.libraryMetrics && (
+            <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowUtilizationDialog(true)}>
+              <CardContent className="p-3 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm text-muted-foreground">Library Utilization</p>
+                    <p className="text-2xl md:text-3xl font-bold text-warning mt-1">{citizenStats.libraryMetrics.utilizationPercentage}%</p>
+                    <p className="text-xs text-muted-foreground mt-1">Turnover rate</p>
+                  </div>
+                  <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-warning/30" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
+
+        {citizenStats.libraryMetrics && (
+          <Dialog open={showUtilizationDialog} onOpenChange={setShowUtilizationDialog}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Library Utilization — {citizenStats.libraryMetrics.libraryName}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
+                  <p className="text-sm text-muted-foreground">Turnover Rate</p>
+                  <p className="text-4xl font-bold text-warning mt-1">{citizenStats.libraryMetrics.utilizationPercentage}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">Times borrowed ÷ total copies × 100</p>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Total Books', value: citizenStats.libraryMetrics.totalBooks, color: 'text-accent' },
+                    { label: 'Currently Borrowed', value: citizenStats.libraryMetrics.currentBorrowedBooks, color: 'text-info' },
+                    { label: 'Total Members', value: citizenStats.libraryMetrics.totalMembers, color: 'text-primary' },
+                    { label: 'Your Borrowed Books', value: citizenStats.borrowedBooks, color: 'text-success' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="flex justify-between items-center p-3 rounded-lg bg-secondary/50">
+                      <span className="text-sm">{label}</span>
+                      <span className={`font-bold ${color}`}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Utilization</span>
+                    <span>{citizenStats.libraryMetrics.utilizationPercentage}%</span>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${citizenStats.libraryMetrics.utilizationPercentage >= 80 ? 'bg-destructive' : citizenStats.libraryMetrics.utilizationPercentage >= 50 ? 'bg-warning' : 'bg-success'}`}
+                      style={{ width: `${Math.min(citizenStats.libraryMetrics.utilizationPercentage, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {citizenStats.overdueBooks > 0 && (
           <Card className="border-destructive/50 bg-destructive/5">
@@ -346,12 +418,12 @@ function LibrarianDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => handleCardClick('overborrowed')}>
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => handleCardClick('overdemand')}>
             <CardContent className="p-3 md:p-6">
               <div className="flex flex-col">
-                <p className="text-xs md:text-sm text-muted-foreground">Overborrowed</p>
-                <p className="text-2xl md:text-3xl font-bold text-destructive mt-1">{getOverborrowedBooksCount(selectedLibrary ?? undefined)}</p>
-                <p className="text-xs text-muted-foreground mt-1">Book titles over capacity</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Over Demand</p>
+                <p className="text-2xl md:text-3xl font-bold text-destructive mt-1">{getOverDemandCount(selectedLibrary ?? undefined)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Low copies, high demand</p>
               </div>
             </CardContent>
           </Card>
@@ -391,6 +463,7 @@ function LibrarianDashboard() {
                 {selectedMetricType === 'members' && 'Members Breakdown'}
                 {selectedMetricType === 'borrowed' && 'Borrowed Books Breakdown'}
                 {selectedMetricType === 'downloads' && 'Downloads Breakdown'}
+                {selectedMetricType === 'overdemand' && 'Over Demand Books'}
                 {selectedMetricType === 'overborrowed' && 'Overborrowed Books'}
               </DialogTitle>
             </DialogHeader>
@@ -445,6 +518,51 @@ function LibrarianDashboard() {
                     <p className="text-sm text-muted-foreground">Library</p>
                     <p className="text-lg font-semibold text-accent mt-1">{library.name}</p>
                   </div>
+                </div>
+              )}
+              {selectedMetricType === 'overdemand' && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-lg bg-destructive/10">
+                    <p className="text-sm text-muted-foreground">Over Demand Book Titles</p>
+                    <p className="text-3xl font-bold text-destructive mt-1">{getOverDemandCount(selectedLibrary ?? undefined)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Low availability (≤30% copies left) with active demand</p>
+                  </div>
+                  {getOverDemandBooks(selectedLibrary ?? undefined).length === 0 ? (
+                    <div className="p-4 rounded-lg bg-success/10 text-center">
+                      <p className="text-sm text-success font-medium">No over-demand books right now</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Book Title</th>
+                            <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Author</th>
+                            <th className="text-center py-2 pr-3 text-muted-foreground font-medium">Total</th>
+                            <th className="text-center py-2 pr-3 text-muted-foreground font-medium">Available</th>
+                            <th className="text-center py-2 pr-3 text-muted-foreground font-medium">Borrowed</th>
+                            <th className="text-center py-2 text-muted-foreground font-medium">Requests</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getOverDemandBooks(selectedLibrary ?? undefined).map(book => (
+                            <tr key={book.bookId} className="border-b border-destructive/20 bg-destructive/5">
+                              <td className="py-2 pr-3 font-medium">{book.title}</td>
+                              <td className="py-2 pr-3 text-muted-foreground">{book.author}</td>
+                              <td className="py-2 pr-3 text-center">{book.totalCount}</td>
+                              <td className="py-2 pr-3 text-center text-warning font-semibold">{book.availableCount}</td>
+                              <td className="py-2 pr-3 text-center text-info font-semibold">{book.activeBorrowings}</td>
+                              <td className="py-2 text-center">
+                                <span className="inline-block bg-destructive text-destructive-foreground text-xs font-bold px-2 py-0.5 rounded-full">
+                                  {book.pendingRequests}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
               {selectedMetricType === 'overborrowed' && (
@@ -528,9 +646,17 @@ function AdminDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
-        <div>
-          <h1 className="page-header">Municipal Library Dashboard</h1>
-          <p className="text-muted-foreground mt-1">City-wide metrics and analytics</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="page-header">Municipal Library Dashboard</h1>
+            <p className="text-muted-foreground mt-1">City-wide metrics and analytics</p>
+          </div>
+          <Card className="shrink-0 border-2 border-accent/30">
+            <CardContent className="p-3 text-center min-w-[80px]">
+              <p className="text-2xl md:text-3xl font-bold text-accent leading-none">{libraryBranches.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Libraries</p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -567,7 +693,7 @@ function AdminDashboard() {
             </div></CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => handleMetricCardClick('utilization')}>
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
               <p className="text-xs md:text-sm text-muted-foreground">Avg Utilization</p>
               <p className="text-2xl md:text-3xl font-bold text-warning mt-1">{aggregated.averageUtilization}%</p>
@@ -575,11 +701,11 @@ function AdminDashboard() {
             </div></CardContent>
           </Card>
 
-          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => handleMetricCardClick('overborrowed')}>
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => handleMetricCardClick('overdemand')}>
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
-              <p className="text-xs md:text-sm text-muted-foreground">Overborrowed</p>
-              <p className="text-2xl md:text-3xl font-bold text-destructive mt-1">{getOverborrowedBooksCount()}</p>
-              <p className="text-xs text-muted-foreground mt-1">Book titles over capacity</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Over Demand</p>
+              <p className="text-2xl md:text-3xl font-bold text-destructive mt-1">{getOverDemandCount()}</p>
+              <p className="text-xs text-muted-foreground mt-1">Low copies, high demand</p>
             </div></CardContent>
           </Card>
 
@@ -588,15 +714,15 @@ function AdminDashboard() {
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
               <p className="text-xs md:text-sm text-muted-foreground">Overdue Books</p>
               <p className="text-2xl md:text-3xl font-bold text-destructive mt-1">{overdueData.overdue}</p>
-              <p className="text-xs text-destructive/70 mt-1">{overdueData.pct}% of borrowed</p>
+              <p className="text-xs text-destructive/70 mt-1">Past due date, not returned</p>
             </div></CardContent>
           </Card>
 
           <Card className="stat-card">
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
-              <p className="text-xs md:text-sm text-muted-foreground">Total Fines</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Total Fines Issued</p>
               <p className="text-2xl md:text-3xl font-bold text-warning mt-1">₹{finesData.collected + finesData.pending}</p>
-              <p className="text-xs text-success mt-1">Collected ₹{finesData.collected}</p>
+              <p className="text-xs text-success mt-1">Collected to Date ₹{finesData.collected}</p>
             </div></CardContent>
           </Card>
 
@@ -705,6 +831,7 @@ function AdminDashboard() {
                 {selectedMetricType === 'members' && 'Total Members - Library-Wise Breakdown'}
                 {selectedMetricType === 'borrowed' && 'Borrowed Books - Library-Wise Breakdown'}
                 {selectedMetricType === 'downloads' && 'Downloads - Library-Wise Breakdown'}
+                {selectedMetricType === 'overdemand' && 'Over Demand Books - Library-Wise Breakdown'}
                 {selectedMetricType === 'overborrowed' && 'Overborrowed Books - Library-Wise Breakdown'}
                 {selectedLibraryForDetails && !selectedMetricType && `${selectedMetrics?.libraryName} - Detailed Metrics`}
               </DialogTitle>
@@ -795,6 +922,87 @@ function AdminDashboard() {
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {selectedMetricType === 'utilization' && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
+                  <p className="text-sm text-muted-foreground">Avg Turnover Rate (All Libraries)</p>
+                  <p className="text-4xl font-bold text-warning mt-2">{aggregated.averageUtilization}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">Total times borrowed ÷ total copies × 100</p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Breakdown by Library:</h4>
+                  <div className="space-y-2">
+                    {allMetrics.map(metric => {
+                      const pct = metric.utilizationPercentage;
+                      const color = pct >= 80 ? 'text-destructive' : pct >= 50 ? 'text-warning' : 'text-success';
+                      const barColor = pct >= 80 ? 'bg-destructive' : pct >= 50 ? 'bg-warning' : 'bg-success';
+                      return (
+                        <div key={metric.libraryId} className="p-3 rounded-lg bg-secondary/50 border border-secondary space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-sm">{metric.libraryName}</span>
+                            <span className={`text-lg font-bold ${color}`}>{pct}%</span>
+                          </div>
+                          <div className="w-full bg-secondary rounded-full h-2">
+                            <div className={`${barColor} h-2 rounded-full transition-all`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{metric.currentBorrowedBooks} currently borrowed</span>
+                            <span>{metric.totalBooks} total copies</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedMetricType === 'overdemand' && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm text-muted-foreground">Total Over Demand Book Titles</p>
+                  <p className="text-4xl font-bold text-destructive mt-2">{getOverDemandCount()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Books with ≤30% copies available and active borrow demand</p>
+                </div>
+                {getOverDemandBooks().length === 0 ? (
+                  <div className="p-4 rounded-lg bg-success/10 text-center">
+                    <p className="text-sm text-success font-medium">No over-demand books right now</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Book Title</th>
+                          <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Author</th>
+                          <th className="text-center py-2 pr-3 text-muted-foreground font-medium">Total</th>
+                          <th className="text-center py-2 pr-3 text-muted-foreground font-medium">Available</th>
+                          <th className="text-center py-2 pr-3 text-muted-foreground font-medium">Borrowed</th>
+                          <th className="text-center py-2 text-muted-foreground font-medium">Requests</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getOverDemandBooks().map(book => (
+                          <tr key={book.bookId} className="border-b border-destructive/20 bg-destructive/5">
+                            <td className="py-2 pr-3 font-medium">{book.title}</td>
+                            <td className="py-2 pr-3 text-muted-foreground">{book.author}</td>
+                            <td className="py-2 pr-3 text-center">{book.totalCount}</td>
+                            <td className="py-2 pr-3 text-center text-warning font-semibold">{book.availableCount}</td>
+                            <td className="py-2 pr-3 text-center text-info font-semibold">{book.activeBorrowings}</td>
+                            <td className="py-2 text-center">
+                              <span className="inline-block bg-destructive text-destructive-foreground text-xs font-bold px-2 py-0.5 rounded-full">
+                                {book.pendingRequests}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1125,7 +1333,7 @@ function AdminSmartInsights() {
                 <Bell className={`w-4 h-4 mt-0.5 shrink-0 ${alerts.pendingReservations > 0 ? 'text-info' : 'text-success'}`} />
                 <div>
                   <p className={`text-sm font-semibold ${alerts.pendingReservations > 0 ? 'text-info' : 'text-success'}`}>
-                    Pending Reservations
+                    Pending Requests
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {alerts.pendingReservations > 0 ? `${alerts.pendingReservations} request(s) awaiting approval` : 'No pending requests'}

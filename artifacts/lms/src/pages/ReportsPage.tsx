@@ -2,6 +2,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { BookOpen, Users2, Download, TrendingUp } from 'lucide-react';
+import { books, members, downloadLogs } from '@/data/mockData';
 
 const monthlyData = [
   { month: 'Jan', borrowed: 120, returned: 110, downloads: 340 },
@@ -24,6 +25,10 @@ const genreData = [
 const COLORS = ['hsl(228,60%,24%)', 'hsl(345,85%,50%)', 'hsl(210,100%,50%)', 'hsl(142,71%,45%)', 'hsl(38,92%,50%)', 'hsl(220,15%,70%)'];
 
 export default function ReportsPage() {
+  const totalBooks = books.length;
+  const activeMembers = members.filter(m => m.status === 'active').length;
+  const totalDownloads = downloadLogs.length;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -31,9 +36,9 @@ export default function ReportsPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
-            { icon: BookOpen, label: 'Total Books', value: '2,450', color: 'primary' },
-            { icon: Users2, label: 'Active Members', value: '1,230', color: 'success' },
-            { icon: Download, label: 'Downloads', value: '12,500', color: 'info' },
+            { icon: BookOpen, label: 'Total Books', value: totalBooks.toLocaleString(), color: 'primary' },
+            { icon: Users2, label: 'Active Members', value: activeMembers.toLocaleString(), color: 'success' },
+            { icon: Download, label: 'Downloads', value: totalDownloads.toLocaleString(), color: 'info' },
             { icon: TrendingUp, label: 'This Month', value: '+15%', color: 'accent' },
           ].map((stat, i) => (
             <Card key={i} className="stat-card">

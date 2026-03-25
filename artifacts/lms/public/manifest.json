@@ -2,7 +2,7 @@
   "name": "Library Management System - Nanded",
   "short_name": "LibVerse",
   "description": "Municipal Library Management System for Nanded",
-  "start_url": "/",
+  "start_url": "/lms/",
   "display": "standalone",
   "background_color": "#f5f6fa",
   "theme_color": "#1e2f6b",

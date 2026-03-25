@@ -5,9 +5,9 @@ import { libraryBranches } from '@/data/mockData';
 import {
   Search, BookOpen, Send, Users, ShieldCheck, User, Settings,
   ChevronDown, ChevronRight, PlusCircle, List, CheckSquare,
-  ClipboardCheck, History, UserPlus, Users2, FileInput, FileText,
-  Package, RotateCcw, Clock, Home, Bookmark, Globe, BarChart3,
-  DollarSign, Bell, LogOut, Library, LayoutDashboard, Calendar, Download, Eye
+  ClipboardCheck, History, UserPlus, Users2, FileText,
+  Package, RotateCcw, Clock, Home, Bookmark, BarChart3,
+  IndianRupee, Bell, LogOut, Library, LayoutDashboard, Calendar, Download, Eye
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AccessibilityControls } from '@/components/AccessibilityControls';
@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
     ]
   },
   { label: 'Events', icon: Calendar, path: '/events' },
-  { label: 'Borrow Request', icon: Send, path: '/borrow-requests' },
+  { label: 'Borrow Request', icon: Send, path: '/borrow-requests', roles: ['citizen'] },
   {
     label: 'Circulation', icon: RotateCcw, roles: ['admin', 'librarian'], children: [
       { label: 'Issue/Return Books', icon: BookOpen, path: '/circulation/books', roles: ['admin', 'librarian'] },
@@ -57,8 +57,15 @@ const navItems: NavItem[] = [
   {
     label: 'Admin', icon: ShieldCheck, roles: ['admin'], children: [
       { label: 'Library Management', icon: Library, path: '/admin/libraries' },
-      { label: 'Requests To Approve', icon: FileInput, path: '/admin/requests-approve' },
-      { label: 'Requests To Borrow', icon: FileText, path: '/admin/requests-borrow' },
+      { label: 'Borrow Requests', icon: FileText, path: '/admin/requests-approve' },
+      { label: 'Borrowed Resources', icon: Package, path: '/admin/borrowed' },
+      { label: 'Renewal Requests', icon: RotateCcw, path: '/admin/renewals' },
+      { label: 'History', icon: Clock, path: '/admin/history' },
+    ]
+  },
+  {
+    label: 'Librarian', icon: ShieldCheck, roles: ['librarian'], children: [
+      { label: 'Borrow Requests', icon: FileText, path: '/admin/requests-approve' },
       { label: 'Borrowed Resources', icon: Package, path: '/admin/borrowed' },
       { label: 'Renewal Requests', icon: RotateCcw, path: '/admin/renewals' },
       { label: 'History', icon: Clock, path: '/admin/history' },
@@ -77,7 +84,7 @@ const navItems: NavItem[] = [
     ]
   },
   { label: 'Reports & Analytics', icon: BarChart3, path: '/reports', roles: ['admin', 'librarian'] },
-  { label: 'Fees Management', icon: DollarSign, path: '/fees', roles: ['admin', 'librarian'] },
+  { label: 'Fees Management', icon: IndianRupee, path: '/fees', roles: ['admin', 'librarian'] },
 ];
 
 interface AppSidebarProps {
@@ -126,7 +133,7 @@ export default function AppSidebar({ onClose }: AppSidebarProps) {
           }}
           className={`w-full sidebar-nav-item ${depth > 0 ? 'pl-10' : ''} ${
             isActive(item.path) ? 'sidebar-nav-item-active' : ''
-          } ${item.label === 'Search Books' ? 'bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground rounded-lg my-1' : ''}`}
+          }`}
         >
           <Icon size={18} />
           <span className="flex-1 text-left">{item.label}</span>
@@ -146,19 +153,19 @@ export default function AppSidebar({ onClose }: AppSidebarProps) {
   return (
     <aside className="w-full h-full bg-sidebar flex flex-col border-r border-sidebar-border overflow-hidden">
       {/* Header */}
-      <div className="p-4 md:p-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-2 md:gap-3 mb-1">
+      <div className="p-4 border-b border-sidebar-border">
+        <div className="flex flex-col items-center gap-1 mb-1">
           <img
-            src="logo1.png"
+            src="/lms/logo1.png"
             alt="Library Logo"
-            className="h-7 md:h-8 w-auto object-contain block shrink-0 max-w-[110px]"
+            className="h-8 w-auto object-contain block rounded-lg max-w-full"
           />
-          <h1 className="text-base md:text-xl font-bold text-sidebar-primary-foreground leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-sm font-bold text-sidebar-primary-foreground leading-tight whitespace-nowrap" style={{ fontFamily: 'var(--font-display)' }}>
             Library Management
           </h1>
         </div>
         {selectedLibrary && user?.role !== 'admin' && (
-          <p className="text-xs text-sidebar-muted mt-1 truncate">Branch: {selectedLibraryName || 'Loading...'}</p>
+          <p className="text-xs text-white mt-1 truncate text-center">Branch: {selectedLibraryName || 'Loading...'}</p>
         )}
       </div>
 
@@ -175,16 +182,16 @@ export default function AppSidebar({ onClose }: AppSidebarProps) {
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name || 'User'}</p>
-          <p className="text-xs text-sidebar-muted capitalize">{user?.role}</p>
+          <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
+          <p className="text-xs text-white/70 capitalize">{user?.role}</p>
         </div>
-        <button onClick={() => setShowAccessibility(true)} className="text-sidebar-muted hover:text-sidebar-foreground" title="Accessibility Settings">
+        <button onClick={() => setShowAccessibility(true)} className="text-white hover:text-white/80" title="Accessibility Settings">
           <Eye size={18} />
         </button>
-        <button onClick={() => navigate('/notifications')} className="text-sidebar-muted hover:text-sidebar-foreground">
+        <button onClick={() => navigate('/notifications')} className="text-white hover:text-white/80">
           <Bell size={18} />
         </button>
-        <button onClick={logout} className="text-sidebar-muted hover:text-sidebar-foreground">
+        <button onClick={logout} className="text-white hover:text-white/80">
           <LogOut size={18} />
         </button>
       </div>

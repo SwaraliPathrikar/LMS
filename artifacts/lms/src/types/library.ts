@@ -202,7 +202,7 @@ export interface Renewal {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'due_reminder' | 'approval' | 'event' | 'membership_expiry' | 'fine_alert';
+  type: 'due_reminder' | 'approval' | 'event' | 'membership_expiry' | 'fine_alert' | 'borrow_request' | 'overdue_alert' | 'renewal_request' | 'new_member' | 'low_inventory' | 'fine_collected';
   title: string;
   message: string;
   read: boolean;
@@ -238,6 +238,9 @@ export interface LibrarySettings {
   operatingHours: string; // e.g., "9 AM - 6 PM"
   closedDays: string[]; // e.g., ["Sunday", "Monday"]
   maxCapacity: number; // Maximum members that can be in library
+  standardFineRate?: number; // Override standard fine rate for this library (₹/day)
+  premiumFineRate?: number;  // Override premium fine rate for this library (₹/day)
+  membershipFee?: number;    // Override membership fee for this library (₹/year)
   lastUpdated: string;
   updatedBy: string;
 }

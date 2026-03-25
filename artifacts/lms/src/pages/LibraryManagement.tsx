@@ -9,6 +9,14 @@ import { BookOpen, Users, FileText, Settings, TrendingUp, AlertCircle } from 'lu
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { books, bookInventory, members, circulationTransactions, fines, libraryBranches } from '@/data/mockData';
 
+// Helper: live borrowed count for a member
+const getMemberBorrowed = (memberId: string) =>
+  circulationTransactions.filter(t => t.memberId === memberId && (t.status === 'issued' || t.status === 'overdue')).length;
+
+// Helper: live fines due for a member
+const getMemberFines = (memberId: string, finesArr: typeof fines) =>
+  finesArr.filter(f => f.memberId === memberId && f.status === 'pending').reduce((s, f) => s + f.amount, 0);
+
 export default function LibraryManagement() {
   const { user, selectedLibrary, setSelectedLibrary } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
@@ -45,10 +53,12 @@ export default function LibraryManagement() {
   if (isAdmin && selectedLibrary) {
     filteredTransactions = circulationTransactions.filter(t => t.libraryId === selectedLibrary);
     filteredMembers = members.filter(m => m.libraryId === selectedLibrary);
-    filteredFines = fines.filter(f => f.libraryId === selectedLibrary);
+    filteredFines = fines.filter(f => filteredMembers.some(m => m.id === f.memberId));
   }
   
-  const totalBooks = books.length;
+  const totalBooks = selectedLibrary
+    ? bookInventory.filter(bi => bi.libraryId === selectedLibrary).reduce((sum, bi) => sum + bi.totalCount, 0)
+    : bookInventory.reduce((sum, bi) => sum + bi.totalCount, 0);
   const totalMembers = filteredMembers.length;
   const activeMembers = filteredMembers.filter(m => m.status === 'active').length;
   const totalBorrowed = filteredTransactions.filter(ct => ct.status === 'issued' || ct.status === 'overdue').length;
@@ -242,7 +252,7 @@ export default function LibraryManagement() {
                         <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
                           {member.status}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">{member.borrowedBooks} books</span>
+                        <span className="text-xs text-muted-foreground">{getMemberBorrowed(member.id)} books</span>
                       </div>
                     </div>
                   ))}

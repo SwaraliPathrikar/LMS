@@ -25,7 +25,7 @@ export default function AdminRequestsPage() {
     return null;
   }
 
-  if (user.role !== 'admin') {
+  if (user.role !== 'admin' && user.role !== 'librarian') {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -34,7 +34,7 @@ export default function AdminRequestsPage() {
             <CardContent className="p-8 text-center">
               <AlertCircle className="w-12 h-12 text-destructive/30 mx-auto mb-3" />
               <p className="text-muted-foreground font-medium">Access Denied</p>
-              <p className="text-sm text-muted-foreground mt-2">Only administrators can approve requests.</p>
+              <p className="text-sm text-muted-foreground mt-2">Only administrators and librarians can approve requests.</p>
             </CardContent>
           </Card>
         </div>
@@ -149,8 +149,8 @@ export default function AdminRequestsPage() {
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         <div>
-          <h1 className="page-header">Borrow Requests - Admin Approval</h1>
-          <p className="text-muted-foreground mt-1">Review and approve/reject borrow requests for restricted resources</p>
+          <h1 className="page-header">Borrow Requests</h1>
+          <p className="text-muted-foreground mt-1">Review and manage all borrow requests from members</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

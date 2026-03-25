@@ -71,9 +71,45 @@ export default function Events() {
     }, 1500);
   };
 
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const openEditDialog = (event: Event) => {
+    setFormData({
+      title: event.title,
+      description: event.description,
+      category: event.category as any,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      location: event.location,
+      capacity: event.capacity,
+    });
+    setIsEditMode(true);
+    setShowManageDialog(false);
+    setShowCreateDialog(true);
+  };
+
   const handleCreateEvent = () => {
-    alert(`Event "${formData.title}" created successfully!`);
+    if (isEditMode && selectedEvent) {
+      // Apply edits to the event in-place
+      const idx = events.findIndex(e => e.id === selectedEvent.id);
+      if (idx !== -1) {
+        events[idx] = {
+          ...events[idx],
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          location: formData.location,
+          capacity: formData.capacity,
+        };
+      }
+      alert(`Event "${formData.title}" updated successfully!`);
+    } else {
+      alert(`Event "${formData.title}" created successfully!`);
+    }
     setFormData({ title: '', description: '', category: 'reading', startDate: '', endDate: '', location: '', capacity: 100 });
+    setIsEditMode(false);
     setShowCreateDialog(false);
   };
 
@@ -100,9 +136,9 @@ export default function Events() {
         {/* Role-Based Tabs */}
         {(isAdmin || isLibrarian) && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="browse">Browse Events</TabsTrigger>
-              <TabsTrigger value="manage">Manage Events</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-auto">
+              <TabsTrigger value="browse" className="flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm">Browse Events</TabsTrigger>
+              <TabsTrigger value="manage" className="flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm">Manage Events</TabsTrigger>
             </TabsList>
 
             {/* Browse Tab - For All Users */}
@@ -448,10 +484,10 @@ export default function Events() {
         </Dialog>
 
         {/* Create Event Dialog - Admin/Librarian Only */}
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <Dialog open={showCreateDialog} onOpenChange={(open) => { if (!open) { setIsEditMode(false); setShowCreateDialog(false); } }}>
           <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
+              <DialogTitle>{isEditMode ? 'Edit Event' : 'Create New Event'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -541,11 +577,11 @@ export default function Events() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              <Button variant="outline" onClick={() => { setIsEditMode(false); setShowCreateDialog(false); }}>
                 Cancel
               </Button>
               <Button onClick={handleCreateEvent} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                Create Event
+                {isEditMode ? 'Save Changes' : 'Create Event'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -577,7 +613,7 @@ export default function Events() {
               <Button variant="outline" onClick={() => setShowManageDialog(false)}>
                 Close
               </Button>
-              <Button variant="outline" className="text-destructive hover:text-destructive">
+              <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => selectedEvent && openEditDialog(selectedEvent)}>
                 <Edit size={16} className="mr-2" /> Edit Event
               </Button>
               <Button

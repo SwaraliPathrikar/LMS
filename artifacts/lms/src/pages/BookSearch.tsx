@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBooks } from '@/contexts/BooksContext';
 import { bookInventory, libraryBranches, genres, borrowRequests, members } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +38,7 @@ export default function BookSearch() {
   const { selectedLibrary } = useAuth();
   const { user } = useAuth();
   const { books } = useBooks();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedResourceType, setSelectedResourceType] = useState<IssueType | null>(null);
@@ -291,14 +293,8 @@ export default function BookSearch() {
                 </Button>
                 {user?.role === 'citizen' && (
                   <Button onClick={() => {
-                    const book = selectedBook!;
-                    setRequestBook(book);
-                    // pre-fill if only one issue type
-                    if (book.issueTypes?.length === 1) {
-                      setRequestFormData(prev => ({ ...prev, issueType: book.issueTypes[0] }));
-                    }
                     setShowBookDetail(false);
-                    setShowRequestForm(true);
+                    navigate(`/borrow-requests?bookId=${selectedBook!.id}`);
                   }} className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground">
                     <Send size={16} className="mr-2" /> Request This Book
                   </Button>

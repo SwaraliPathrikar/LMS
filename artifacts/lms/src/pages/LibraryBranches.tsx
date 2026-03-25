@@ -10,13 +10,11 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { LibraryBranch } from '@/types/library';
 
 export default function LibraryBranches() {
-  const { selectedDepartment, setSelectedLibrary } = useAuth();
+  const { setSelectedLibrary } = useAuth();
   const navigate = useNavigate();
   const [selectedBranch, setSelectedBranch] = useState<LibraryBranch | null>(null);
 
-  const branches = selectedDepartment
-    ? libraryBranches.filter(b => b.departmentId === selectedDepartment)
-    : libraryBranches;
+  const branches = libraryBranches;
 
   const handleSelectLibrary = (branch: LibraryBranch) => {
     setSelectedLibrary(branch.id);

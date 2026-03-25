@@ -217,9 +217,18 @@ export default function AllResourcesPage() {
                 <Button onClick={() => setSelectedBook(null)} variant="outline" className="flex-1">
                   Close
                 </Button>
-                <Button onClick={() => navigate('/books/search')} className="flex-1 bg-accent hover:bg-accent/90">
-                  Borrow This Book
-                </Button>
+                {user?.role === 'citizen' ? (
+                  <Button
+                    onClick={() => navigate(`/borrow-requests?bookId=${selectedBook.id}`)}
+                    className="flex-1 bg-accent hover:bg-accent/90"
+                  >
+                    Request This Book
+                  </Button>
+                ) : (
+                  <Button onClick={() => navigate('/books/search')} className="flex-1 bg-accent hover:bg-accent/90">
+                    Borrow This Book
+                  </Button>
+                )}
               </div>
             </div>
           )}

@@ -35,8 +35,10 @@ import BorrowedResourcesPage from "./pages/BorrowedResourcesPage";
 import RenewalRequestsPage from "./pages/RenewalRequestsPage";
 import AdminHistoryPage from "./pages/AdminHistoryPage";
 import CitizenHistoryPage from "./pages/CitizenHistoryPage";
+import CitizenMyRequestsPage from "./pages/CitizenMyRequestsPage";
 import ResourceManagement from "./pages/ResourceManagement";
 import SignUpPage from "./pages/SignUpPage";
+import LibraryLocationManagement from "./pages/LibraryLocationManagement";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,7 @@ function AppRoutes() {
       <Route path="/members/add" element={<ProtectedRoute><AddMemberPage /></ProtectedRoute>} />
       <Route path="/members" element={<ProtectedRoute><MembersPage /></ProtectedRoute>} />
       <Route path="/admin/requests-approve" element={<ProtectedRoute><AdminRequestsPage /></ProtectedRoute>} />
+      <Route path="/admin/libraries" element={<ProtectedRoute><LibraryLocationManagement /></ProtectedRoute>} />
       <Route path="/admin/requests-borrow" element={<ProtectedRoute><AdminRequestsPage /></ProtectedRoute>} />
       <Route path="/admin/borrowed" element={<ProtectedRoute><BorrowedResourcesPage /></ProtectedRoute>} />
       <Route path="/admin/renewals" element={<ProtectedRoute><RenewalRequestsPage /></ProtectedRoute>} />
@@ -76,7 +79,7 @@ function AppRoutes() {
       <Route path="/circulation" element={<ProtectedRoute><CirculationManagement /></ProtectedRoute>} />
       <Route path="/circulation/books" element={<ProtectedRoute><BookCirculationPage /></ProtectedRoute>} />
       <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-      <Route path="/user/requests" element={<ProtectedRoute><BorrowRequests /></ProtectedRoute>} />
+      <Route path="/user/requests" element={<ProtectedRoute><CitizenMyRequestsPage /></ProtectedRoute>} />
       <Route path="/user/borrowed" element={<ProtectedRoute><BorrowedResourcesPage /></ProtectedRoute>} />
       <Route path="/user/history" element={<ProtectedRoute><CitizenHistoryPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />

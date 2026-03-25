@@ -1,0 +1,21 @@
+Options -MultiViews
+RewriteEngine On
+RewriteBase /lms/
+
+# Redirect uppercase /LMS/ to lowercase /lms/
+RewriteCond %{REQUEST_URI} ^/LMS/(.*)$
+RewriteRule ^ /lms/%1 [L,R=301]
+
+# Redirect HTTP to HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Don't rewrite actual files or directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Don't rewrite assets folder
+RewriteCond %{REQUEST_URI} !^/lms/assets/
+
+# Send everything else to index.html for React Router
+RewriteRule ^ /lms/index.html [L]

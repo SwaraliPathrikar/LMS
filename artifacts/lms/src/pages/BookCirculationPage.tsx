@@ -32,6 +32,7 @@ export default function BookCirculationPage() {
 
   // Barcode Scanner State
   const [showScanner, setShowScanner] = useState(false);
+  const [scannerMode, setScannerMode] = useState<'issue' | 'return'>('issue');
   const [scannerStatus, setScannerStatus] = useState<string>('');
   const scannerRef = useRef<any>(null);
   const scannerDivRef = useRef<HTMLDivElement>(null);
@@ -48,10 +49,32 @@ export default function BookCirculationPage() {
 
   const handleBarcodeScan = (barcode: string) => {
     stopScanner();
-    // Search all books (not just available ones) to avoid stale-closure on libraryBooks memo
+    const normalize = (s: string) => s.replace(/[-\s]/g, '').toLowerCase();
+    const normalizedBarcode = normalize(barcode);
     const found = books.find(
-      (b: any) => b.isbn === barcode || b.id === barcode
+      (b: any) => normalize(b.isbn) === normalizedBarcode || normalize(b.id) === normalizedBarcode
     );
+
+    if (scannerMode === 'return') {
+      if (!found) {
+        toast({ title: 'Book Not Found', description: `No book found with barcode: ${barcode}`, variant: 'destructive' });
+        return;
+      }
+      // Find the active issued transaction for this book at this library
+      const transaction = circulationTransactions.find(
+        t => t.bookId === found.id && t.libraryId === selectedLibrary && (t.status === 'issued' || t.status === 'overdue')
+      );
+      if (!transaction) {
+        toast({ title: 'No Active Issue', description: `"${found.title}" has no active issue record at this library.`, variant: 'destructive' });
+        return;
+      }
+      setSelectedTransaction(transaction);
+      setShowReturnDialog(true);
+      toast({ title: 'Book Found', description: `"${found.title}" — ready to return.` });
+      return;
+    }
+
+    // Issue mode
     if (found) {
       setSelectedBook(found);
       setBookSearchQuery(found.title);
@@ -59,7 +82,6 @@ export default function BookCirculationPage() {
         (inv: any) => inv.bookId === found.id && inv.libraryId === selectedLibrary
       );
       if (!inventory) {
-        // Book exists in system but not stocked at this library
         setScannerStatus('unavailable');
         toast({ title: 'Not Available Here', description: `"${found.title}" is not stocked at this library branch.`, variant: 'destructive' });
       } else if (inventory.availableCount <= 0) {
@@ -298,14 +320,14 @@ export default function BookCirculationPage() {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="issue" className="flex items-center gap-2">
-                <ArrowRight size={16} />
-                Issue Book
+            <TabsList className="grid w-full grid-cols-2 h-auto">
+              <TabsTrigger value="issue" className="flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm">
+                <ArrowRight size={14} />
+                <span>Issue Book</span>
               </TabsTrigger>
-              <TabsTrigger value="return" className="flex items-center gap-2">
-                <ArrowLeft size={16} />
-                Return Book
+              <TabsTrigger value="return" className="flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm">
+                <ArrowLeft size={14} />
+                <span>Return Book</span>
               </TabsTrigger>
             </TabsList>
 
@@ -416,11 +438,11 @@ export default function BookCirculationPage() {
                           size="sm"
                           className="shrink-0 flex items-center gap-1.5 min-w-[44px]"
                           disabled={!selectedMember}
-                          onClick={() => setShowScanner(true)}
+                          onClick={() => { setScannerMode('issue'); setShowScanner(true); }}
                           title="Scan Book Barcode"
                         >
                           <Camera size={15} />
-                          <span className="hidden sm:inline text-xs">📷 Scan Book Barcode</span>
+                          <span className="hidden sm:inline text-xs">Scan Book Barcode</span>
                         </Button>
                       </div>
                       {scannerStatus === 'unavailable' && (
@@ -448,7 +470,7 @@ export default function BookCirculationPage() {
                               </Badge>
                             </div>
                           </div>
-                          <Button size="sm" variant="ghost" onClick={() => setSelectedBook(null)}>
+                          <Button size="sm" variant="ghost" onClick={() => { setSelectedBook(null); setScannerStatus(''); }}>
                             Change
                           </Button>
                         </div>
@@ -461,7 +483,7 @@ export default function BookCirculationPage() {
                             return (
                               <button
                                 key={b.id}
-                                onClick={() => setSelectedBook(b)}
+                                onClick={() => { setSelectedBook(b); setScannerStatus(''); }}
                                 className="w-full text-left p-3 rounded-lg border hover:bg-accent/50 transition-colors"
                               >
                                 <p className="font-medium text-sm">{b.title}</p>
@@ -524,14 +546,27 @@ export default function BookCirculationPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                    <Input
-                      className="pl-10"
-                      placeholder="Search by member name, book title, or transaction ID..."
-                      value={returnSearchQuery}
-                      onChange={e => setReturnSearchQuery(e.target.value)}
-                    />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                      <Input
+                        className="pl-10"
+                        placeholder="Search by member name, book title, or transaction ID..."
+                        value={returnSearchQuery}
+                        onChange={e => setReturnSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 flex items-center gap-1.5"
+                      onClick={() => { setScannerMode('return'); setShowScanner(true); }}
+                      title="Scan Book Barcode to Return"
+                    >
+                      <Camera size={15} />
+                      <span className="hidden sm:inline text-xs"> Scan to Return</span>
+                    </Button>
                   </div>
 
                   {filteredTransactions.length > 0 ? (
@@ -605,7 +640,7 @@ export default function BookCirculationPage() {
 
         {/* Issue Confirmation Dialog */}
         <Dialog open={showIssueDialog} onOpenChange={setShowIssueDialog}>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Confirm Book Issue</DialogTitle>
             </DialogHeader>
@@ -644,7 +679,7 @@ export default function BookCirculationPage() {
 
         {/* Return Confirmation Dialog */}
         <Dialog open={showReturnDialog} onOpenChange={setShowReturnDialog}>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Confirm Book Return</DialogTitle>
             </DialogHeader>
@@ -710,7 +745,7 @@ export default function BookCirculationPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Camera size={18} />
-                <span style={{ fontWeight: 600 }}>Scan Book Barcode</span>
+                <span style={{ fontWeight: 600 }}>{scannerMode === 'return' ? 'Scan Book to Return' : 'Scan Book Barcode'}</span>
               </div>
               <button
                 onClick={stopScanner}

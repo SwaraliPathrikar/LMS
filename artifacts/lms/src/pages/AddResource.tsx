@@ -161,7 +161,7 @@ export default function AddResource() {
       publishedYear: parseInt(year) || new Date().getFullYear(),
       pages: parseInt(pages) || 0,
       description,
-      accessibilityFeatures: accessibilityFeatures,
+      accessibilityFeatures: accessibilityFeatures as any,
     };
 
     // Add book to books array using context
@@ -313,7 +313,7 @@ export default function AddResource() {
                   </Badge>
                 ))}
               </div>
-              {keywords.length < 5 && <p className="text-xs text-warning">Add {5 - keywords.length} more keyword(s)</p>}
+              {keywords.length < 5 && <p className="text-xs text-warning">Add {5 - keywords.length} or more keyword(s)</p>}
             </CardContent>
           </Card>
 

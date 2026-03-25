@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { fines, members, books, libraryBranches, circulationTransactions, getFineDetails } from '@/data/mockData';
-import { Card, CardContent } from '@/components/ui/card';
+import { fines, members, books, libraryBranches, circulationTransactions, getFineDetails, systemSettings, librarySettings, updateLibrarySettingsById } from '@/data/mockData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { IndianRupee, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { IndianRupee, CheckCircle, AlertCircle, Info, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
@@ -225,18 +226,52 @@ function CitizenFeesPage() {
 // ============================================================================
 
 function AdminLibrarianFeesPage() {
-  const { user, selectedLibrary, setSelectedLibrary } = useAuth();
+  const { user, selectedLibrary } = useAuth();
   const [localSelectedLibrary, setLocalSelectedLibrary] = useState<string | null>(selectedLibrary);
   const [selectedFine, setSelectedFine] = useState<string | null>(null);
 
   const isAdmin = user?.role === 'admin';
+  const libraryToUse = isAdmin ? localSelectedLibrary : selectedLibrary;
+
+  const currentLibSettings = librarySettings.find(s => s.libraryId === libraryToUse);
+  const [libStdFine, setLibStdFine] = useState(
+    String(currentLibSettings?.standardFineRate ?? systemSettings.standardFineRate)
+  );
+  const [libPremFine, setLibPremFine] = useState(
+    String(currentLibSettings?.premiumFineRate ?? systemSettings.premiumFineRate)
+  );
+  const [libMembershipFee, setLibMembershipFee] = useState(
+    String(currentLibSettings?.membershipFee ?? systemSettings.membershipFee)
+  );
+
+  // Update fee states when library selection changes
+  const handleLibraryChange = (libId: string | null) => {
+    setLocalSelectedLibrary(libId);
+    const settings = librarySettings.find(s => s.libraryId === libId);
+    setLibStdFine(String(settings?.standardFineRate ?? systemSettings.standardFineRate));
+    setLibPremFine(String(settings?.premiumFineRate ?? systemSettings.premiumFineRate));
+    setLibMembershipFee(String(settings?.membershipFee ?? systemSettings.membershipFee));
+  };
+
+  const handleSaveLibFees = () => {
+    if (!libraryToUse) { toast.error('No library selected'); return; }
+    const std = parseFloat(libStdFine);
+    const prem = parseFloat(libPremFine);
+    const mem = parseFloat(libMembershipFee);
+    if (isNaN(std) || isNaN(prem) || isNaN(mem) || std < 0 || prem < 0 || mem < 0) {
+      toast.error('Please enter valid positive numbers');
+      return;
+    }
+    updateLibrarySettingsById(libraryToUse, { standardFineRate: std, premiumFineRate: prem, membershipFee: mem });
+    toast.success('Fee settings saved for ' + (selectedBranch?.name || 'library'));
+  };
 
   const libraryFines = useMemo(() => {
-    const libraryToUse = isAdmin ? localSelectedLibrary : selectedLibrary;
-    if (!libraryToUse) return [];
+    const lib = isAdmin ? localSelectedLibrary : selectedLibrary;
+    if (!lib) return [];
 
     // Get all circulation transactions for this library
-    const libraryTransactions = circulationTransactions.filter(t => t.libraryId === libraryToUse);
+    const libraryTransactions = circulationTransactions.filter(t => t.libraryId === lib);
     const libraryMemberIds = new Set(libraryTransactions.map(t => t.memberId));
 
     // Filter fines for members in this library
@@ -248,7 +283,6 @@ function AdminLibrarianFeesPage() {
   const paid = libraryFines.filter(f => f.status === 'paid');
   const waived = libraryFines.filter(f => f.status === 'waived');
 
-  const libraryToUse = isAdmin ? localSelectedLibrary : selectedLibrary;
   const selectedBranch = libraryBranches.find(b => b.id === libraryToUse);
   const selectedFineData = libraryFines.find(f => f.id === selectedFine);
   const fineDetails = selectedFineData ? getFineDetails(selectedFineData) : null;
@@ -264,14 +298,14 @@ function AdminLibrarianFeesPage() {
           </p>
         </div>
 
-        {/* Library Selector for Admin */}
+        {/* Library Selector for Admin — always first */}
         {isAdmin && (
           <Card>
             <CardContent className="p-4">
               <label className="text-sm font-medium">Select Library</label>
               <select
                 value={localSelectedLibrary || ''}
-                onChange={e => setLocalSelectedLibrary(e.target.value || null)}
+                onChange={e => handleLibraryChange(e.target.value || null)}
                 className="w-full p-2 border rounded-lg mt-2 text-sm"
               >
                 <option value="">-- Select a Library --</option>
@@ -290,12 +324,58 @@ function AdminLibrarianFeesPage() {
             <CardContent className="p-8 text-center">
               <AlertCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-muted-foreground">
-                {isAdmin ? 'Please select a library from the dropdown to view fines' : 'Please select a library from the sidebar to view fines'}
+                {isAdmin ? 'Please select a library from the dropdown above' : 'Please select a library from the sidebar to view fines'}
               </p>
             </CardContent>
           </Card>
         ) : (
           <>
+            {/* Fee Settings Card — shown after library is selected */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <IndianRupee size={18} /> Fee Settings — {selectedBranch?.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <p className="text-xs text-muted-foreground mb-3">
+                  {isAdmin
+                    ? 'Set fine rates and membership fee for this library. These override system defaults.'
+                    : `Set the fine rate and membership fee for this library. System default fine: ₹${systemSettings.standardFineRate}/day.`}
+                </p>
+                {isAdmin ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Standard Fine Rate (₹/day)</label>
+                      <Input type="number" min={0} value={libStdFine} onChange={e => setLibStdFine(e.target.value)} className="mt-1 h-9 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Premium Fine Rate (₹/day)</label>
+                      <Input type="number" min={0} value={libPremFine} onChange={e => setLibPremFine(e.target.value)} className="mt-1 h-9 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Membership Fee (₹/year)</label>
+                      <Input type="number" min={0} value={libMembershipFee} onChange={e => setLibMembershipFee(e.target.value)} className="mt-1 h-9 text-sm" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Standard Fine Rate (₹/day)</label>
+                      <Input type="number" min={0} value={libStdFine} onChange={e => setLibStdFine(e.target.value)} className="mt-1 h-9 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Membership Fee (₹/year)</label>
+                      <Input type="number" min={0} value={libMembershipFee} onChange={e => setLibMembershipFee(e.target.value)} className="mt-1 h-9 text-sm" />
+                    </div>
+                  </div>
+                )}
+                <Button size="sm" className="mt-3" onClick={handleSaveLibFees}>
+                  <Save size={14} className="mr-1" /> Save Fee Settings
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
               <Card className="stat-card">

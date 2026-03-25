@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Library Management System - Nanded</title>
     <meta name="description" content="Municipal Library Management System for Nanded">
-    <link rel="icon" type="image/png" href="logo1.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/lms/logo1.png" />
+    <link rel="manifest" href="/lms/manifest.json" />
     <meta name="theme-color" content="#1e2f6b" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,10 +20,17 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Aggressively unregister ALL service workers and clear all caches
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(r) { r.unregister(); });
         });
+        // Also clear all caches
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            names.forEach(function(name) { caches.delete(name); });
+          });
+        }
       }
     </script>
   </body>

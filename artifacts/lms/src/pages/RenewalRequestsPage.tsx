@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
@@ -53,22 +53,21 @@ export default function RenewalRequestsPage() {
         transactionId: t.id,
         memberId: t.memberId,
         bookId: t.bookId,
+        libraryId: t.libraryId,
         currentDueDate: t.dueDate,
         newDueDate: new Date(new Date(t.dueDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         renewalCount: t.renewalCount,
-        status: 'pending' as const,
+        status: 'pending' as 'pending' | 'approved' | 'rejected',
         requestDate: new Date().toISOString().split('T')[0],
       }));
 
-    if (isLibrarian && selectedLibrary) {
-      requests = requests.filter(r => {
-        const trans = circulationTransactions.find(t => t.id === r.transactionId);
-        return trans?.libraryId === selectedLibrary;
-      });
+    // Filter by selected library for both admin and librarian
+    if (selectedLibrary) {
+      requests = requests.filter(r => r.libraryId === selectedLibrary);
     }
 
     return requests;
-  }, [isLibrarian, selectedLibrary]);
+  }, [selectedLibrary]);
 
   const pending = renewalRequests.filter(r => r.status === 'pending');
   const approved = renewalRequests.filter(r => r.status === 'approved');
@@ -118,7 +117,18 @@ export default function RenewalRequestsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {!selectedLibrary ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <AlertCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground">
+                {isAdmin ? 'Please select a library to view renewal requests' : 'Please select a library from the sidebar'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="stat-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -209,6 +219,8 @@ export default function RenewalRequestsPage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">

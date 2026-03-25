@@ -39,12 +39,12 @@ export const departments: Department[] = [
 ];
 
 export let libraryBranches: LibraryBranch[] = [
-  { id: 'lib1', name: 'Central Municipal Library', departmentId: 'edu', address: 'Shivaji Chowk, Nanded - 431601', lat: 19.1383, lng: 77.3210, mapLink: 'https://maps.google.com/?q=19.1383,77.3210', phone: '+91 2462 253 1234', librarian: 'Dr. Meera Kulkarni' },
-  { id: 'lib2', name: 'Vazirabad Branch Library', departmentId: 'edu', address: 'Vazirabad, Nanded - 431602', lat: 19.1520, lng: 77.3150, mapLink: 'https://maps.google.com/?q=19.1520,77.3150', phone: '+91 2462 267 5678', librarian: 'Shri. Ramesh Patil' },
-  { id: 'lib3', name: 'Taroda Reading Center', departmentId: 'edu', address: 'Taroda, Nanded - 431605', lat: 19.1250, lng: 77.2980, mapLink: 'https://maps.google.com/?q=19.1250,77.2980', phone: '+91 2462 246 9012', librarian: 'Smt. Anita Joshi' },
-  { id: 'lib4', name: 'Vishnupuri Community Library', departmentId: 'edu', address: 'Vishnupuri, Nanded - 431606', lat: 19.1450, lng: 77.3350, mapLink: 'https://maps.google.com/?q=19.1450,77.3350', phone: '+91 2462 287 3456', librarian: 'Shri. Vijay More' },
-  { id: 'lib5', name: 'MIDC Digital Library', departmentId: 'tech', address: 'MIDC Area, Nanded - 431603', lat: 19.1600, lng: 77.3100, mapLink: 'https://maps.google.com/?q=19.1600,77.3100', phone: '+91 2462 242 7890', librarian: 'Dr. Sunil Deshmukh' },
-  { id: 'lib6', name: 'Government Records Archive', departmentId: 'gov', address: 'Civil Lines, Nanded - 431604', lat: 19.1400, lng: 77.3280, mapLink: 'https://maps.google.com/?q=19.1400,77.3280', phone: '+91 2462 212 0123', librarian: 'Shri. Prakash Gaikwad' },
+  { id: 'lib1', name: 'Central Municipal Library', departmentId: 'edu', address: 'Shivaji Chowk, Nanded - 431601', lat: 19.1383, lng: 77.3210, mapLink: 'https://maps.app.goo.gl/VZdH6ZdSisofPfu99', phone: '+91 2462 253 1234', librarian: 'Lib: Dr. Meera Kulkarni' },
+  { id: 'lib2', name: 'Vazirabad Branch Library', departmentId: 'edu', address: 'Vazirabad, Nanded - 431602', lat: 19.1520, lng: 77.3150, mapLink: 'https://maps.app.goo.gl/MKSMHNahPo3xCaEM8', phone: '+91 2462 267 5678', librarian: 'Lib: Shri. Ramesh Patil' },
+  { id: 'lib3', name: 'Taroda Reading Center', departmentId: 'edu', address: 'Taroda, Nanded - 431605', lat: 19.1250, lng: 77.2980, mapLink: 'https://maps.app.goo.gl/FjYhtxPyWqpoRwJp7', phone: '+91 2462 246 9012', librarian: 'Lib: Smt. Anita Joshi' },
+  { id: 'lib4', name: 'Vishnupuri Community Library', departmentId: 'edu', address: 'Vishnupuri, Nanded - 431606', lat: 19.1450, lng: 77.3350, mapLink: 'https://maps.app.goo.gl/yVW8FrFMsqRKCaoT9', phone: '+91 2462 287 3456', librarian: 'Lib: Shri. Vijay More' },
+  { id: 'lib5', name: 'MIDC Digital Library', departmentId: 'tech', address: 'MIDC Area, Nanded - 431603', lat: 19.1600, lng: 77.3100, mapLink: 'https://maps.app.goo.gl/mFusMFVPzYdi2Bp17', phone: '+91 2462 242 7890', librarian: 'Lib: Dr. Sunil Deshmukh' },
+  { id: 'lib6', name: 'Government Records Archive', departmentId: 'gov', address: 'District Collectorate, Nanded - 431601', lat: 19.1502, lng: 77.3188, mapLink: 'https://maps.app.goo.gl/3unzuCNm7oMrwET96', phone: '+91 2462 212 0123', librarian: 'Lib: Shri. Prakash Gaikwad' },
 ];
 
 // Helper function to generate book cover images - returns undefined to use SVG fallback
@@ -111,67 +111,67 @@ export const books: Book[] = [
 
 export const bookInventory: BookInventory[] = [
   // b1 – The Discovery of India
-  { bookId: 'b1', libraryId: 'lib1', totalCount: 20, availableCount: 11, returningIn2Days: 4 },
-  { bookId: 'b1', libraryId: 'lib2', totalCount: 15, availableCount: 8, returningIn2Days: 2 },
-  { bookId: 'b1', libraryId: 'lib3', totalCount: 10, availableCount: 5, returningIn2Days: 3 },
+  { bookId: 'b1', libraryId: 'lib1', totalCount: 35, availableCount: 26, returningIn2Days: 4 },
+  { bookId: 'b1', libraryId: 'lib2', totalCount: 28, availableCount: 21, returningIn2Days: 2 },
+  { bookId: 'b1', libraryId: 'lib3', totalCount: 20, availableCount: 15, returningIn2Days: 3 },
   // b2 – Wings of Fire
-  { bookId: 'b2', libraryId: 'lib1', totalCount: 25, availableCount: 18, returningIn2Days: 3 },
-  { bookId: 'b2', libraryId: 'lib2', totalCount: 12, availableCount: 4, returningIn2Days: 5 },
+  { bookId: 'b2', libraryId: 'lib1', totalCount: 40, availableCount: 33, returningIn2Days: 3 },
+  { bookId: 'b2', libraryId: 'lib2', totalCount: 22, availableCount: 14, returningIn2Days: 5 },
   // b3 – Malgudi Days
-  { bookId: 'b3', libraryId: 'lib1', totalCount: 8, availableCount: 3, returningIn2Days: 1 },
-  { bookId: 'b3', libraryId: 'lib2', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  { bookId: 'b3', libraryId: 'lib1', totalCount: 18, availableCount: 13, returningIn2Days: 1 },
+  { bookId: 'b3', libraryId: 'lib2', totalCount: 14, availableCount: 12, returningIn2Days: 0 },
   // b4 – Introduction to Algorithms
-  { bookId: 'b4', libraryId: 'lib5', totalCount: 5, availableCount: 2, returningIn2Days: 1 },
-  { bookId: 'b4', libraryId: 'lib1', totalCount: 4, availableCount: 3, returningIn2Days: 0 },
+  { bookId: 'b4', libraryId: 'lib5', totalCount: 12, availableCount: 9, returningIn2Days: 1 },
+  { bookId: 'b4', libraryId: 'lib1', totalCount: 10, availableCount: 9, returningIn2Days: 0 },
   // b5 – Arthashastra
-  { bookId: 'b5', libraryId: 'lib1', totalCount: 12, availableCount: 7, returningIn2Days: 2 },
-  { bookId: 'b5', libraryId: 'lib3', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
+  { bookId: 'b5', libraryId: 'lib1', totalCount: 22, availableCount: 17, returningIn2Days: 2 },
+  { bookId: 'b5', libraryId: 'lib3', totalCount: 16, availableCount: 13, returningIn2Days: 1 },
   // b6 – Constitution of India
-  { bookId: 'b6', libraryId: 'lib6', totalCount: 30, availableCount: 22, returningIn2Days: 3 },
-  { bookId: 'b6', libraryId: 'lib1', totalCount: 20, availableCount: 14, returningIn2Days: 2 },
+  { bookId: 'b6', libraryId: 'lib6', totalCount: 50, availableCount: 42, returningIn2Days: 3 },
+  { bookId: 'b6', libraryId: 'lib1', totalCount: 35, availableCount: 29, returningIn2Days: 2 },
   // b7 – Yoga Sutras
-  { bookId: 'b7', libraryId: 'lib1', totalCount: 10, availableCount: 6, returningIn2Days: 2 },
-  { bookId: 'b7', libraryId: 'lib3', totalCount: 7, availableCount: 5, returningIn2Days: 1 },
+  { bookId: 'b7', libraryId: 'lib1', totalCount: 20, availableCount: 16, returningIn2Days: 2 },
+  { bookId: 'b7', libraryId: 'lib3', totalCount: 15, availableCount: 13, returningIn2Days: 1 },
   // b8 – Digital India
-  { bookId: 'b8', libraryId: 'lib5', totalCount: 6, availableCount: 4, returningIn2Days: 1 },
-  { bookId: 'b8', libraryId: 'lib1', totalCount: 5, availableCount: 3, returningIn2Days: 0 },
+  { bookId: 'b8', libraryId: 'lib5', totalCount: 14, availableCount: 12, returningIn2Days: 1 },
+  { bookId: 'b8', libraryId: 'lib1', totalCount: 12, availableCount: 11, returningIn2Days: 0 },
   // b9 – The God of Small Things
-  { bookId: 'b9', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
-  { bookId: 'b9', libraryId: 'lib2', totalCount: 8, availableCount: 5, returningIn2Days: 2 },
+  { bookId: 'b9', libraryId: 'lib1', totalCount: 20, availableCount: 17, returningIn2Days: 1 },
+  { bookId: 'b9', libraryId: 'lib2', totalCount: 16, availableCount: 13, returningIn2Days: 2 },
   // b10 – Midnight's Children
-  { bookId: 'b10', libraryId: 'lib1', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
-  { bookId: 'b10', libraryId: 'lib3', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  { bookId: 'b10', libraryId: 'lib1', totalCount: 16, availableCount: 13, returningIn2Days: 1 },
+  { bookId: 'b10', libraryId: 'lib3', totalCount: 12, availableCount: 10, returningIn2Days: 0 },
   // b11 – A Brief History of Time
-  { bookId: 'b11', libraryId: 'lib1', totalCount: 12, availableCount: 8, returningIn2Days: 2 },
-  { bookId: 'b11', libraryId: 'lib5', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
+  { bookId: 'b11', libraryId: 'lib1', totalCount: 22, availableCount: 18, returningIn2Days: 2 },
+  { bookId: 'b11', libraryId: 'lib5', totalCount: 16, availableCount: 14, returningIn2Days: 1 },
   // b12 – Sapiens
-  { bookId: 'b12', libraryId: 'lib1', totalCount: 15, availableCount: 10, returningIn2Days: 3 },
-  { bookId: 'b12', libraryId: 'lib2', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
+  { bookId: 'b12', libraryId: 'lib1', totalCount: 25, availableCount: 20, returningIn2Days: 3 },
+  { bookId: 'b12', libraryId: 'lib2', totalCount: 18, availableCount: 15, returningIn2Days: 1 },
   // b13 – The Selfish Gene
-  { bookId: 'b13', libraryId: 'lib1', totalCount: 7, availableCount: 5, returningIn2Days: 1 },
-  { bookId: 'b13', libraryId: 'lib5', totalCount: 5, availableCount: 3, returningIn2Days: 0 },
+  { bookId: 'b13', libraryId: 'lib1', totalCount: 14, availableCount: 12, returningIn2Days: 1 },
+  { bookId: 'b13', libraryId: 'lib5', totalCount: 10, availableCount: 8, returningIn2Days: 0 },
   // b14 – Thinking, Fast and Slow
-  { bookId: 'b14', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 2 },
-  { bookId: 'b14', libraryId: 'lib2', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
+  { bookId: 'b14', libraryId: 'lib1', totalCount: 20, availableCount: 17, returningIn2Days: 2 },
+  { bookId: 'b14', libraryId: 'lib2', totalCount: 16, availableCount: 13, returningIn2Days: 1 },
   // b15 – The Lean Startup
-  { bookId: 'b15', libraryId: 'lib1', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
-  { bookId: 'b15', libraryId: 'lib5', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  { bookId: 'b15', libraryId: 'lib1', totalCount: 16, availableCount: 14, returningIn2Days: 1 },
+  { bookId: 'b15', libraryId: 'lib5', totalCount: 12, availableCount: 10, returningIn2Days: 0 },
   // b16 – Atomic Habits
-  { bookId: 'b16', libraryId: 'lib1', totalCount: 15, availableCount: 11, returningIn2Days: 2 },
-  { bookId: 'b16', libraryId: 'lib2', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
-  { bookId: 'b16', libraryId: 'lib3', totalCount: 8, availableCount: 5, returningIn2Days: 1 },
+  { bookId: 'b16', libraryId: 'lib1', totalCount: 25, availableCount: 21, returningIn2Days: 2 },
+  { bookId: 'b16', libraryId: 'lib2', totalCount: 18, availableCount: 15, returningIn2Days: 1 },
+  { bookId: 'b16', libraryId: 'lib3', totalCount: 14, availableCount: 11, returningIn2Days: 1 },
   // b17 – The Art of Computer Programming
-  { bookId: 'b17', libraryId: 'lib5', totalCount: 4, availableCount: 3, returningIn2Days: 0 },
-  { bookId: 'b17', libraryId: 'lib1', totalCount: 3, availableCount: 2, returningIn2Days: 0 },
+  { bookId: 'b17', libraryId: 'lib5', totalCount: 10, availableCount: 9, returningIn2Days: 0 },
+  { bookId: 'b17', libraryId: 'lib1', totalCount: 8, availableCount: 7, returningIn2Days: 0 },
   // b18 – Clean Code
-  { bookId: 'b18', libraryId: 'lib1', totalCount: 10, availableCount: 7, returningIn2Days: 1 },
-  { bookId: 'b18', libraryId: 'lib5', totalCount: 8, availableCount: 5, returningIn2Days: 2 },
+  { bookId: 'b18', libraryId: 'lib1', totalCount: 20, availableCount: 17, returningIn2Days: 1 },
+  { bookId: 'b18', libraryId: 'lib5', totalCount: 16, availableCount: 13, returningIn2Days: 2 },
   // b19 – The Pragmatic Programmer
-  { bookId: 'b19', libraryId: 'lib1', totalCount: 8, availableCount: 6, returningIn2Days: 1 },
-  { bookId: 'b19', libraryId: 'lib5', totalCount: 6, availableCount: 4, returningIn2Days: 0 },
+  { bookId: 'b19', libraryId: 'lib1', totalCount: 16, availableCount: 14, returningIn2Days: 1 },
+  { bookId: 'b19', libraryId: 'lib5', totalCount: 12, availableCount: 10, returningIn2Days: 0 },
   // b20 – Design Patterns
-  { bookId: 'b20', libraryId: 'lib5', totalCount: 5, availableCount: 3, returningIn2Days: 1 },
-  { bookId: 'b20', libraryId: 'lib1', totalCount: 4, availableCount: 3, returningIn2Days: 0 },
+  { bookId: 'b20', libraryId: 'lib5', totalCount: 12, availableCount: 10, returningIn2Days: 1 },
+  { bookId: 'b20', libraryId: 'lib1', totalCount: 10, availableCount: 9, returningIn2Days: 0 },
   // b21–b50: government/digital resources — physical copies at lib1 & lib6
   { bookId: 'b21', libraryId: 'lib6', totalCount: 10, availableCount: 8, returningIn2Days: 1 },
   { bookId: 'b22', libraryId: 'lib6', totalCount: 8, availableCount: 6, returningIn2Days: 0 },
@@ -211,17 +211,20 @@ export const bookInventory: BookInventory[] = [
 ];
 
 export const members: Member[] = [
-  { id: 'u5', name: 'Rajesh Sharma', email: 'rajesh@email.com', mobile: '+91 98765 43210', membershipId: 'MEM-2024-001', membershipType: 'premium', joinDate: '2024-01-15', expiryDate: '2025-01-15', status: 'active', borrowedBooks: 3, finesDue: 0, libraryId: 'lib1' },
-  { id: 'u6', name: 'Priya Desai', email: 'priya@email.com', mobile: '+91 87654 32109', membershipId: 'MEM-2024-002', membershipType: 'student', joinDate: '2024-03-20', expiryDate: '2025-03-20', status: 'active', borrowedBooks: 5, finesDue: 50, libraryId: 'lib1' },
-  { id: 'u7', name: 'Amit Kulkarni', email: 'amit@email.com', mobile: '+91 76543 21098', membershipId: 'MEM-2024-003', membershipType: 'standard', joinDate: '2024-06-10', expiryDate: '2025-06-10', status: 'active', borrowedBooks: 1, finesDue: 0, libraryId: 'lib2' },
-  { id: 'm4', name: 'Sneha Patil', email: 'sneha@email.com', mobile: '+91 65432 10987', membershipId: 'MEM-2023-015', membershipType: 'standard', joinDate: '2023-09-01', expiryDate: '2024-09-01', status: 'expired', borrowedBooks: 0, finesDue: 120, libraryId: 'lib2' },
-  { id: 'm5', name: 'Vikram Joshi', email: 'vikram@email.com', mobile: '+91 54321 09876', membershipId: 'MEM-2024-004', membershipType: 'senior', joinDate: '2024-02-28', expiryDate: '2025-02-28', status: 'active', borrowedBooks: 2, finesDue: 0, libraryId: 'lib1' },
+  { id: 'u5', name: 'Rajesh Sharma', email: 'rajesh@email.com', mobile: '+91 98765 43210', membershipId: 'MEM-2024-001', membershipType: 'premium', joinDate: '2025-10-15', expiryDate: '2026-10-15', status: 'active', borrowedBooks: 3, finesDue: 0, libraryId: 'lib1' },
+  { id: 'u6', name: 'Priya Desai', email: 'priya@email.com', mobile: '+91 87654 32109', membershipId: 'MEM-2024-002', membershipType: 'student', joinDate: '2025-03-29', expiryDate: '2026-03-29', status: 'active', borrowedBooks: 5, finesDue: 50, libraryId: 'lib1' },
+  { id: 'u7', name: 'Amit Kulkarni', email: 'amit@email.com', mobile: '+91 76543 21098', membershipId: 'MEM-2024-003', membershipType: 'standard', joinDate: '2025-06-10', expiryDate: '2026-06-10', status: 'active', borrowedBooks: 1, finesDue: 0, libraryId: 'lib2' },
+  { id: 'm4', name: 'Sneha Patil', email: 'sneha@email.com', mobile: '+91 65432 10987', membershipId: 'MEM-2023-015', membershipType: 'standard', joinDate: '2025-09-01', expiryDate: '2026-09-01', status: 'expired', borrowedBooks: 0, finesDue: 120, libraryId: 'lib2' },
+  { id: 'm5', name: 'Vikas Joshi', email: 'vikas@email.com', mobile: '+91 54321 09876', membershipId: 'MEM-2024-004', membershipType: 'senior', joinDate: '2025-02-28', expiryDate: '2026-02-28', status: 'active', borrowedBooks: 2, finesDue: 0, libraryId: 'lib1' },
 ];
 
 export const borrowRequests: BorrowRequest[] = [
   { id: 'br1', bookId: 'b4', userId: 'u6', userName: 'Priya Desai', libraryId: 'lib5', issueType: 'pdf', status: 'pending', reason: 'Academic research on algorithms', purpose: 'MSc Computer Science thesis', email: 'priya@email.com', mobile: '+91 87654 32109', requestDate: '2026-03-10' },
   { id: 'br2', bookId: 'b8', userId: 'u5', userName: 'Rajesh Sharma', libraryId: 'lib1', issueType: 'pdf', status: 'approved', reason: 'Government policy research', purpose: 'Policy analysis for smart city project', email: 'rajesh@email.com', mobile: '+91 98765 43210', requestDate: '2026-03-08', responseDate: '2026-03-09', notificationSent: true },
   { id: 'br3', bookId: 'b1', userId: 'u7', userName: 'Amit Kulkarni', libraryId: 'lib2', issueType: 'physical', status: 'pending', reason: 'Personal reading interest', purpose: 'General knowledge', email: 'amit@email.com', mobile: '+91 76543 21098', requestDate: '2026-03-11' },
+  { id: 'br4', bookId: 'b2', userId: 'u5', userName: 'Rajesh Sharma', libraryId: 'lib1', issueType: 'physical', status: 'approved', reason: 'Inspirational reading', purpose: 'Personal development', email: 'rajesh@email.com', mobile: '+91 98765 43210', requestDate: '2026-02-20', responseDate: '2026-02-21', notificationSent: true },
+  { id: 'br5', bookId: 'b3', userId: 'u5', userName: 'Rajesh Sharma', libraryId: 'lib1', issueType: 'physical', status: 'rejected', reason: 'Leisure reading', purpose: 'Entertainment', email: 'rajesh@email.com', mobile: '+91 98765 43210', requestDate: '2026-02-10', responseDate: '2026-02-11', rejectionReason: 'Book currently reserved for another member', notificationSent: true },
+  { id: 'br6', bookId: 'b5', userId: 'u5', userName: 'Rajesh Sharma', libraryId: 'lib2', issueType: 'pdf', status: 'pending', reason: 'Research on Indian constitution', purpose: 'Civic awareness project', email: 'rajesh@email.com', mobile: '+91 98765 43210', requestDate: '2026-03-15' },
 ];
 
 export const fines: Fine[] = [
@@ -231,10 +234,34 @@ export const fines: Fine[] = [
 ];
 
 export const checkInRecords: CheckInRecord[] = [
-  { id: 'ci1', memberId: 'u5', libraryId: 'lib1', checkInTime: '2026-03-11T09:30:00', checkOutTime: '2026-03-11T14:15:00' },
-  { id: 'ci2', memberId: 'u6', libraryId: 'lib1', checkInTime: '2026-03-11T10:00:00' },
-  { id: 'ci3', memberId: 'u7', libraryId: 'lib2', checkInTime: '2026-03-11T11:45:00' },
-  { id: 'ci4', memberId: 'm5', libraryId: 'lib1', checkInTime: '2026-03-11T08:00:00', checkOutTime: '2026-03-11T12:30:00' },
+  // lib1 – Central Municipal Library
+  { id: 'ci1',  memberId: 'u5',  libraryId: 'lib1', checkInTime: '2026-03-11T09:30:00', checkOutTime: '2026-03-11T14:15:00' },
+  { id: 'ci2',  memberId: 'u6',  libraryId: 'lib1', checkInTime: '2026-03-11T10:00:00' },
+  { id: 'ci4',  memberId: 'm5',  libraryId: 'lib1', checkInTime: '2026-03-11T08:00:00', checkOutTime: '2026-03-11T12:30:00' },
+  { id: 'ci5',  memberId: 'u5',  libraryId: 'lib1', checkInTime: '2026-03-18T09:00:00', checkOutTime: '2026-03-18T13:00:00' },
+  { id: 'ci6',  memberId: 'u6',  libraryId: 'lib1', checkInTime: '2026-03-20T11:00:00', checkOutTime: '2026-03-20T15:30:00' },
+  { id: 'ci7',  memberId: 'm5',  libraryId: 'lib1', checkInTime: '2026-03-22T08:30:00' },
+  // lib2 – Vazirabad Branch Library
+  { id: 'ci3',  memberId: 'u7',  libraryId: 'lib2', checkInTime: '2026-03-11T11:45:00' },
+  { id: 'ci8',  memberId: 'u7',  libraryId: 'lib2', checkInTime: '2026-03-15T10:30:00', checkOutTime: '2026-03-15T13:45:00' },
+  { id: 'ci9',  memberId: 'u5',  libraryId: 'lib2', checkInTime: '2026-03-17T09:15:00', checkOutTime: '2026-03-17T12:00:00' },
+  { id: 'ci10', memberId: 'm5',  libraryId: 'lib2', checkInTime: '2026-03-19T14:00:00' },
+  // lib3 – Taroda Reading Center
+  { id: 'ci11', memberId: 'u6',  libraryId: 'lib3', checkInTime: '2026-03-12T09:00:00', checkOutTime: '2026-03-12T11:30:00' },
+  { id: 'ci12', memberId: 'u7',  libraryId: 'lib3', checkInTime: '2026-03-14T10:00:00', checkOutTime: '2026-03-14T14:00:00' },
+  { id: 'ci13', memberId: 'u5',  libraryId: 'lib3', checkInTime: '2026-03-21T08:45:00' },
+  // lib4 – Vishnupuri Community Library
+  { id: 'ci14', memberId: 'u5',  libraryId: 'lib4', checkInTime: '2026-03-13T10:00:00', checkOutTime: '2026-03-13T13:00:00' },
+  { id: 'ci15', memberId: 'u6',  libraryId: 'lib4', checkInTime: '2026-03-16T09:30:00', checkOutTime: '2026-03-16T12:30:00' },
+  { id: 'ci16', memberId: 'm5',  libraryId: 'lib4', checkInTime: '2026-03-23T11:00:00' },
+  // lib5 – MIDC Digital Library
+  { id: 'ci17', memberId: 'u5',  libraryId: 'lib5', checkInTime: '2026-03-10T09:00:00', checkOutTime: '2026-03-10T16:00:00' },
+  { id: 'ci18', memberId: 'u7',  libraryId: 'lib5', checkInTime: '2026-03-13T10:30:00', checkOutTime: '2026-03-13T15:00:00' },
+  { id: 'ci19', memberId: 'u6',  libraryId: 'lib5', checkInTime: '2026-03-20T09:00:00' },
+  // lib6 – Government Records Archive
+  { id: 'ci20', memberId: 'u5',  libraryId: 'lib6', checkInTime: '2026-03-09T10:00:00', checkOutTime: '2026-03-09T13:30:00' },
+  { id: 'ci21', memberId: 'm5',  libraryId: 'lib6', checkInTime: '2026-03-14T09:00:00', checkOutTime: '2026-03-14T12:00:00' },
+  { id: 'ci22', memberId: 'u7',  libraryId: 'lib6', checkInTime: '2026-03-22T11:00:00' },
 ];
 
 export const genres = ['History', 'Biography', 'Fiction', 'Technology', 'Political Science', 'Law', 'Health & Wellness', 'Science', 'Literature', 'Arts', 'Business', 'Psychology', 'Self-Help', 'Government', 'News', 'Library Science', 'Philosophy', 'Social Science'];
@@ -259,7 +286,7 @@ export const eventRegistrations: EventRegistration[] = [
 
 export const digitalResources: DigitalResource[] = [
   { id: 'dr1', title: 'Indian Constitution', author: 'Government of India', type: 'pdf', description: 'Complete Indian Constitution document', accessType: 'open', downloadCount: 2340, fileSize: 5.2, uploadDate: '2025-01-15', keywords: ['constitution', 'law', 'india', 'governance', 'rights'], language: 'English' },
-  { id: 'dr2', title: 'Wings of Fire', author: 'APJ Abdul Kalam', type: 'audiobook', description: 'Audiobook version of Wings of Fire autobiography', accessType: 'restricted', downloadCount: 890, fileSize: 450, uploadDate: '2025-02-20', keywords: ['autobiography', 'inspiration', 'science', 'india', 'kalam'], language: 'English' },
+  { id: 'dr2', title: 'Wings of Fire', author: 'Dr. APJ Abdul Kalam', type: 'audiobook', description: 'Audiobook version of Wings of Fire autobiography', accessType: 'restricted', downloadCount: 890, fileSize: 450, uploadDate: '2025-02-20', keywords: ['autobiography', 'inspiration', 'science', 'india', 'kalam'], language: 'English' },
   { id: 'dr3', title: 'Digital India Initiative', author: 'Ministry of Electronics', type: 'video', description: 'Documentary on Digital India program', accessType: 'open', downloadCount: 1560, fileSize: 1200, uploadDate: '2025-03-01', keywords: ['digital', 'india', 'technology', 'governance', 'innovation'], language: 'English' },
   { id: 'dr4', title: 'AI in Libraries', author: 'Dr. Sharma', authors: ['Dr. Sharma', 'Prof. Rajesh Kumar', 'Dr. Anita Patel'], type: 'research_paper', description: 'Academic research on AI applications in library systems', accessType: 'restricted', downloadCount: 340, fileSize: 2.8, uploadDate: '2025-02-10', publishedYear: 2024, keywords: ['ai', 'libraries', 'technology', 'research', 'automation'], language: 'English', researchDomain: 'Artificial Intelligence', researchField: 'Library Science & Technology' },
   { id: 'dr5', title: 'Yoga Sutras', author: 'Patanjali', type: 'audiobook', description: 'Classical yoga philosophy in audio format', accessType: 'open', downloadCount: 1200, fileSize: 380, uploadDate: '2025-01-25', keywords: ['yoga', 'meditation', 'wellness', 'spirituality', 'health'], language: 'English' },
@@ -274,11 +301,35 @@ export const downloadLogs: DownloadLog[] = [
 ];
 
 export const circulationTransactions: CirculationTransaction[] = [
-  { id: 'ct1', memberId: 'u5', bookId: 'b1', libraryId: 'lib1', issueDate: '2026-02-15', dueDate: '2026-03-15', returnDate: '2026-03-10', renewalCount: 0, fineAmount: 0, status: 'returned' },
-  { id: 'ct2', memberId: 'u6', bookId: 'b2', libraryId: 'lib1', issueDate: '2026-02-20', dueDate: '2026-03-20', renewalCount: 1, fineAmount: 50, status: 'overdue' },
-  { id: 'ct3', memberId: 'u7', bookId: 'b3', libraryId: 'lib2', issueDate: '2026-03-01', dueDate: '2026-03-31', renewalCount: 0, fineAmount: 0, status: 'issued' },
-  { id: 'ct4', memberId: 'u5', bookId: 'b4', libraryId: 'lib5', issueDate: '2026-02-25', dueDate: '2026-03-25', renewalCount: 0, fineAmount: 0, status: 'issued' },
-  { id: 'ct5', memberId: 'm5', bookId: 'b5', libraryId: 'lib1', issueDate: '2026-01-15', dueDate: '2026-02-15', returnDate: '2026-02-20', renewalCount: 2, fineAmount: 0, status: 'returned' },
+  // lib1 – Central Municipal Library
+  { id: 'ct1',  memberId: 'u5',  bookId: 'b1',  libraryId: 'lib1', issueDate: '2026-02-15', dueDate: '2026-03-15', returnDate: '2026-03-10', renewalCount: 0, fineAmount: 0,  status: 'returned' },
+  { id: 'ct2',  memberId: 'u6',  bookId: 'b2',  libraryId: 'lib1', issueDate: '2026-02-20', dueDate: '2026-03-20', renewalCount: 1, fineAmount: 50, status: 'overdue' },
+  { id: 'ct5',  memberId: 'm5',  bookId: 'b5',  libraryId: 'lib1', issueDate: '2026-01-15', dueDate: '2026-02-15', returnDate: '2026-02-20', renewalCount: 2, fineAmount: 0,  status: 'returned' },
+  { id: 'ct9',  memberId: 'u5',  bookId: 'b9',  libraryId: 'lib1', issueDate: '2026-03-01', dueDate: '2026-03-31', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  { id: 'ct10', memberId: 'u6',  bookId: 'b12', libraryId: 'lib1', issueDate: '2026-02-10', dueDate: '2026-03-10', returnDate: '2026-03-08', renewalCount: 0, fineAmount: 0,  status: 'returned' },
+  { id: 'ct11', memberId: 'm5',  bookId: 'b16', libraryId: 'lib1', issueDate: '2026-03-05', dueDate: '2026-04-05', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  // lib2 – Vazirabad Branch Library
+  { id: 'ct3',  memberId: 'u7',  bookId: 'b3',  libraryId: 'lib2', issueDate: '2026-03-01', dueDate: '2026-03-31', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  { id: 'ct12', memberId: 'u5',  bookId: 'b1',  libraryId: 'lib2', issueDate: '2026-02-01', dueDate: '2026-03-01', returnDate: '2026-02-28', renewalCount: 0, fineAmount: 0,  status: 'returned' },
+  { id: 'ct13', memberId: 'u6',  bookId: 'b14', libraryId: 'lib2', issueDate: '2026-02-18', dueDate: '2026-03-18', renewalCount: 1, fineAmount: 30, status: 'overdue' },
+  { id: 'ct14', memberId: 'u7',  bookId: 'b16', libraryId: 'lib2', issueDate: '2026-03-10', dueDate: '2026-04-10', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  // lib3 – Taroda Reading Center
+  { id: 'ct15', memberId: 'u6',  bookId: 'b7',  libraryId: 'lib3', issueDate: '2026-02-25', dueDate: '2026-03-25', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  { id: 'ct16', memberId: 'u7',  bookId: 'b10', libraryId: 'lib3', issueDate: '2026-02-10', dueDate: '2026-03-10', returnDate: '2026-03-09', renewalCount: 0, fineAmount: 0,  status: 'returned' },
+  { id: 'ct17', memberId: 'u5',  bookId: 'b16', libraryId: 'lib3', issueDate: '2026-03-05', dueDate: '2026-04-05', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  // lib4 – Vishnupuri Community Library
+  { id: 'ct18', memberId: 'u5',  bookId: 'b2',  libraryId: 'lib4', issueDate: '2026-02-20', dueDate: '2026-03-20', renewalCount: 0, fineAmount: 20, status: 'overdue' },
+  { id: 'ct19', memberId: 'u6',  bookId: 'b9',  libraryId: 'lib4', issueDate: '2026-03-01', dueDate: '2026-03-31', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  { id: 'ct20', memberId: 'm5',  bookId: 'b1',  libraryId: 'lib4', issueDate: '2026-01-20', dueDate: '2026-02-20', returnDate: '2026-02-18', renewalCount: 1, fineAmount: 0,  status: 'returned' },
+  // lib5 – MIDC Digital Library
+  { id: 'ct4',  memberId: 'u5',  bookId: 'b4',  libraryId: 'lib5', issueDate: '2026-02-25', dueDate: '2026-03-25', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  { id: 'ct21', memberId: 'u7',  bookId: 'b8',  libraryId: 'lib5', issueDate: '2026-02-15', dueDate: '2026-03-15', returnDate: '2026-03-14', renewalCount: 0, fineAmount: 0,  status: 'returned' },
+  { id: 'ct22', memberId: 'u6',  bookId: 'b17', libraryId: 'lib5', issueDate: '2026-03-05', dueDate: '2026-04-05', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  { id: 'ct23', memberId: 'u5',  bookId: 'b18', libraryId: 'lib5', issueDate: '2026-02-10', dueDate: '2026-03-10', renewalCount: 1, fineAmount: 40, status: 'overdue' },
+  // lib6 – Government Records Archive
+  { id: 'ct24', memberId: 'u5',  bookId: 'b6',  libraryId: 'lib6', issueDate: '2026-03-01', dueDate: '2026-03-31', renewalCount: 0, fineAmount: 0,  status: 'issued' },
+  { id: 'ct25', memberId: 'm5',  bookId: 'b6',  libraryId: 'lib6', issueDate: '2026-02-01', dueDate: '2026-03-01', returnDate: '2026-02-28', renewalCount: 0, fineAmount: 0,  status: 'returned' },
+  { id: 'ct26', memberId: 'u7',  bookId: 'b6',  libraryId: 'lib6', issueDate: '2026-02-20', dueDate: '2026-03-20', renewalCount: 0, fineAmount: 15, status: 'overdue' },
 ];
 
 export const renewals: Renewal[] = [
@@ -287,11 +338,24 @@ export const renewals: Renewal[] = [
 ];
 
 export const notifications: Notification[] = [
+  // Citizen notifications
   { id: 'n1', userId: 'u5', type: 'due_reminder', title: 'Book Due Soon', message: 'Your book "Introduction to Algorithms" is due on 2026-03-25', read: false, createdAt: '2026-03-11', channel: 'in_system' },
   { id: 'n2', userId: 'u6', type: 'fine_alert', title: 'Fine Amount Due', message: 'You have a pending fine of ₹50 for overdue book', read: false, createdAt: '2026-03-10', channel: 'in_system' },
   { id: 'n3', userId: 'u5', type: 'event', title: 'New Event: Author Talk', message: 'Join us for "Author Talk: Indian Literature" on 2026-04-10', read: true, createdAt: '2026-03-08', channel: 'in_system' },
   { id: 'n4', userId: 'u7', type: 'approval', title: 'Request Approved', message: 'Your borrow request for "Wings of Fire" has been approved', read: true, createdAt: '2026-03-07', channel: 'in_system' },
   { id: 'n5', userId: 'm5', type: 'membership_expiry', title: 'Membership Expiring Soon', message: 'Your membership expires on 2026-02-28. Please renew to continue', read: false, createdAt: '2026-02-20', channel: 'in_system' },
+  // Admin notifications
+  { id: 'n6', userId: 'u1', type: 'borrow_request', title: 'New Borrow Request', message: 'Rajesh Sharma has requested "The Discovery of India" from Central Municipal Library', read: false, createdAt: '2026-03-24', channel: 'in_system' },
+  { id: 'n7', userId: 'u1', type: 'overdue_alert', title: 'Overdue Books Alert', message: '5 books are overdue across all libraries. Immediate action required.', read: false, createdAt: '2026-03-23', channel: 'in_system' },
+  { id: 'n8', userId: 'u1', type: 'renewal_request', title: 'Renewal Request Pending', message: 'Priya Desai has requested renewal for "Wings of Fire" — 3 days remaining', read: false, createdAt: '2026-03-22', channel: 'in_system' },
+  { id: 'n9', userId: 'u1', type: 'new_member', title: 'New Member Registered', message: 'Amit Kulkarni has registered as a new member at Vazirabad Branch Library', read: true, createdAt: '2026-03-21', channel: 'in_system' },
+  { id: 'n10', userId: 'u1', type: 'low_inventory', title: 'Low Inventory Warning', message: '"Constitution of India" has only 1 copy remaining at Taroda Reading Center', read: true, createdAt: '2026-03-20', channel: 'in_system' },
+  { id: 'n11', userId: 'u1', type: 'fine_collected', title: 'Fine Collected', message: '₹150 fine collected from Rajesh Sharma at Central Municipal Library', read: true, createdAt: '2026-03-19', channel: 'in_system' },
+  // Librarian notifications (lib1 librarian = u2)
+  { id: 'n12', userId: 'u2', type: 'borrow_request', title: 'New Borrow Request', message: 'Rajesh Sharma has requested "The Discovery of India"', read: false, createdAt: '2026-03-24', channel: 'in_system' },
+  { id: 'n13', userId: 'u2', type: 'overdue_alert', title: 'Overdue Books Alert', message: '2 books are overdue at Central Municipal Library', read: false, createdAt: '2026-03-23', channel: 'in_system' },
+  { id: 'n14', userId: 'u2', type: 'renewal_request', title: 'Renewal Request Pending', message: 'Priya Desai has requested renewal for "Wings of Fire"', read: true, createdAt: '2026-03-22', channel: 'in_system' },
+  { id: 'n15', userId: 'u2', type: 'new_member', title: 'New Member Registered', message: 'A new member has registered at your library', read: true, createdAt: '2026-03-21', channel: 'in_system' },
 ];
 
 
@@ -332,11 +396,12 @@ export const getLibraryMetrics = (libraryId: string): LibraryMetrics => {
     })
     .length;
   
-  // Library utilization (members checked in today / total members * 100)
-  const checkedInToday = checkInRecords
-    .filter(ci => ci.libraryId === libraryId)
-    .length;
-  const utilizationPercentage = totalMembers > 0 ? Math.round((checkedInToday / totalMembers) * 100) : 0;
+  // Library utilization — turnover rate: total times borrowed / total copies
+  const totalCopies = bookInventory
+    .filter(bi => bi.libraryId === libraryId)
+    .reduce((sum, bi) => sum + bi.totalCount, 0);
+  const timesBorrowed = circulationTransactions.filter(ct => ct.libraryId === libraryId).length;
+  const utilizationPercentage = totalCopies > 0 ? Math.round((timesBorrowed / totalCopies) * 100) : 0;
   
   return {
     libraryId,
@@ -393,6 +458,61 @@ export const getOverbookedCount = (libraryId?: string): number => {
 };
 
 // Overborrowed Books: books where issued copies exceed available copies
+export const getOverDemandBooks = (libraryId?: string) => {
+  const relevantInventory = libraryId
+    ? bookInventory.filter(bi => bi.libraryId === libraryId)
+    : bookInventory;
+
+  // Group inventory by bookId
+  const bookMap = new Map<string, { totalCount: number; availableCount: number }>();
+  relevantInventory.forEach(bi => {
+    const existing = bookMap.get(bi.bookId) || { totalCount: 0, availableCount: 0 };
+    bookMap.set(bi.bookId, {
+      totalCount: existing.totalCount + bi.totalCount,
+      availableCount: existing.availableCount + bi.availableCount,
+    });
+  });
+
+  const result: {
+    bookId: string; title: string; author: string;
+    totalCount: number; availableCount: number;
+    pendingRequests: number; activeBorrowings: number; demandScore: number;
+  }[] = [];
+
+  bookMap.forEach(({ totalCount, availableCount }, bookId) => {
+    const pendingRequests = borrowRequests.filter(br =>
+      br.bookId === bookId &&
+      (br.status === 'pending' || br.status === 'approved') &&
+      (!libraryId || br.libraryId === libraryId)
+    ).length;
+
+    const activeBorrowings = circulationTransactions.filter(ct =>
+      ct.bookId === bookId &&
+      (ct.status === 'issued' || ct.status === 'overdue') &&
+      (!libraryId || ct.libraryId === libraryId)
+    ).length;
+
+    // Over demand: low availability (≤30% of total) AND has pending requests or high borrow rate
+    const availabilityRate = totalCount > 0 ? availableCount / totalCount : 1;
+    const demandScore = pendingRequests + activeBorrowings;
+
+    if (availabilityRate <= 0.3 && demandScore > 0) {
+      const book = books.find(b => b.id === bookId);
+      if (!book) return;
+      result.push({
+        bookId, title: book.title, author: book.author,
+        totalCount, availableCount, pendingRequests, activeBorrowings, demandScore,
+      });
+    }
+  });
+
+  return result.sort((a, b) => b.demandScore - a.demandScore);
+};
+
+export const getOverDemandCount = (libraryId?: string): number => {
+  return getOverDemandBooks(libraryId).length;
+};
+
 export const getOverborrowedBooks = (libraryId?: string) => {
   const relevantInventory = libraryId
     ? bookInventory.filter(bi => bi.libraryId === libraryId)
@@ -517,10 +637,6 @@ export const getFineDetails = (fine: Fine): {
   return { daysOverdue, dailyRate, calculatedAmount, reason };
 };
 
-// ============================================================================
-// SYSTEM SETTINGS
-// ============================================================================
-
 export let systemSettings: SystemSettings = {
   id: 'sys-1',
   standardFineRate: 5,
@@ -571,6 +687,28 @@ export const updateSystemSettings = (updates: Partial<SystemSettings>) => {
 };
 
 /**
+ * Update library settings for a specific library
+ */
+export const updateLibrarySettingsById = (libraryId: string, updates: Partial<LibrarySettings>) => {
+  const idx = librarySettings.findIndex(s => s.libraryId === libraryId);
+  if (idx !== -1) {
+    librarySettings[idx] = { ...librarySettings[idx], ...updates, lastUpdated: new Date().toISOString().split('T')[0] };
+  } else {
+    // Create entry if not exists
+    librarySettings.push({
+      libraryId,
+      libraryName: libraryBranches.find(b => b.id === libraryId)?.name || '',
+      operatingHours: '9:00 AM - 6:00 PM',
+      closedDays: ['Sunday'],
+      maxCapacity: 100,
+      ...updates,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      updatedBy: '',
+    });
+  }
+};
+
+/**
  * Update library settings
  */
 export const updateLibrarySettings = (libraryId: string, updates: Partial<LibrarySettings>) => {
@@ -587,9 +725,6 @@ export const getLibrarySettings = (libraryId: string): LibrarySettings | undefin
   return librarySettings.find(s => s.libraryId === libraryId);
 };
 
-// ============================================================================
-// ANALYTICS & REPORTS
-// ============================================================================
 
 export interface LibraryAnalytics {
   libraryId: string;
@@ -614,9 +749,11 @@ export const getLibraryAnalytics = (libraryId: string): LibraryAnalytics => {
   const libraryTransactions = circulationTransactions.filter(t => t.libraryId === libraryId);
   const libraryFines = fines.filter(f => libraryMembers.some(m => m.id === f.memberId));
   
-  // Utilization
-  const checkedInToday = checkInRecords.filter(ci => ci.libraryId === libraryId).length;
-  const utilizationPercentage = libraryMembers.length > 0 ? Math.round((checkedInToday / libraryMembers.length) * 100) : 0;
+  // Utilization — turnover rate: total times borrowed / total copies
+  const libraryCopies = bookInventory.filter(bi => bi.libraryId === libraryId).reduce((sum, bi) => sum + bi.totalCount, 0);
+  const timesBorrowed = libraryTransactions.length;
+  const issuedBooks = libraryTransactions.filter(t => t.status === 'issued' || t.status === 'overdue').length;
+  const utilizationPercentage = libraryCopies > 0 ? Math.round((timesBorrowed / libraryCopies) * 100) : 0;
   
   // Members
   const activeMembers = libraryMembers.filter(m => m.status === 'active').length;
@@ -628,7 +765,6 @@ export const getLibraryAnalytics = (libraryId: string): LibraryAnalytics => {
   const totalFinesPending = libraryFines.filter(f => f.status === 'pending').reduce((sum, f) => sum + f.amount, 0);
   
   // Books
-  const issuedBooks = libraryTransactions.filter(t => t.status === 'issued' || t.status === 'overdue').length;
   const overdueBooks = libraryTransactions.filter(t => t.status === 'overdue').length;
   
   // Average borrows
