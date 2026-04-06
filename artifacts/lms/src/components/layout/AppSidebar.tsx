@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import {
   Search, BookOpen, Send, Users, ShieldCheck, User, Settings,
   ChevronDown, ChevronRight, PlusCircle, List, CheckSquare,
   ClipboardCheck, History, UserPlus, Users2, FileText,
   Package, RotateCcw, Clock, Home, Bookmark, BarChart3,
-  IndianRupee, Bell, LogOut, Library, LayoutDashboard, Calendar, Download, Eye
+  IndianRupee, Bell, LogOut, Library, LayoutDashboard, Calendar, Download, Eye, CreditCard
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AccessibilityControls } from '@/components/AccessibilityControls';
@@ -73,6 +73,7 @@ const navItems: NavItem[] = [
   },
   {
     label: 'User', icon: User, roles: ['citizen'], children: [
+      { label: 'My Library Card', icon: CreditCard, path: '/my-card' },
       { label: 'My Requests', icon: FileText, path: '/user/requests' },
       { label: 'My Borrowed Resources', icon: Bookmark, path: '/user/borrowed' },
       { label: 'My History', icon: History, path: '/user/history' },
@@ -97,10 +98,12 @@ export default function AppSidebar({ onClose }: AppSidebarProps) {
   const location = useLocation();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [showAccessibility, setShowAccessibility] = useState(false);
+  const [allLibraries, setAllLibraries] = useState<any[]>([]);
 
-  // Get the selected library name from libraryBranches
-  const selectedLibraryName = selectedLibrary 
-    ? libraryBranches.find(lib => lib.id === selectedLibrary)?.name 
+  useEffect(() => { api.libraries.list().then(setAllLibraries).catch(console.error); }, []);
+
+  const selectedLibraryName = selectedLibrary
+    ? allLibraries.find(lib => lib.id === selectedLibrary)?.name
     : null;
 
   const toggleExpand = (label: string) => {

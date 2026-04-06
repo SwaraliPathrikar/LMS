@@ -1,5 +1,17 @@
 export type UserRole = 'admin' | 'librarian' | 'citizen';
 
+export interface MembershipPlan {
+  id: string;
+  name: string;
+  description: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  maxBooks: number;
+  color: string;
+  /** Empty array = applies to ALL libraries (global). Non-empty = only those library IDs. */
+  libraryIds: string[];
+}
+
 export interface User {
   id: string;
   name: string;
@@ -21,11 +33,9 @@ export interface LibraryBranch {
   name: string;
   departmentId: string;
   address: string;
-  lat: number;
-  lng: number;
   mapLink: string;
   phone: string;
-  librarian: string;
+  librarian: string; // display name shown on the card
 }
 
 export type IssueType = 'physical' | 'pdf' | 'movie' | 'mp4' | 'accessibility' | 'audiobook' | 'e-document' | 'content-file' | 'article' | 'news-item' | 'loose-issue' | 'internet-resource';
@@ -152,7 +162,7 @@ export interface DigitalResource {
   id: string;
   title: string;
   author: string;
-  authors?: string[]; // For research papers with multiple authors
+  authors?: string[];
   type: 'pdf' | 'audiobook' | 'video' | 'research_paper';
   description: string;
   accessType: 'open' | 'restricted' | 'paid';
@@ -160,12 +170,12 @@ export interface DigitalResource {
   downloadCount: number;
   fileSize: number;
   uploadDate: string;
-  publishedYear?: number; // For research papers
+  publishedYear?: number;
   keywords: string[];
   language: string;
-  // Research paper specific fields
-  researchDomain?: string; // e.g., "Artificial Intelligence", "Climate Science"
-  researchField?: string; // e.g., "Computer Science", "Environmental Science"
+  fileUrl?: string;
+  researchDomain?: string;
+  researchField?: string;
 }
 
 export interface DownloadLog {
@@ -235,12 +245,34 @@ export interface SystemSettings {
 export interface LibrarySettings {
   libraryId: string;
   libraryName: string;
-  operatingHours: string; // e.g., "9 AM - 6 PM"
-  closedDays: string[]; // e.g., ["Sunday", "Monday"]
-  maxCapacity: number; // Maximum members that can be in library
-  standardFineRate?: number; // Override standard fine rate for this library (₹/day)
-  premiumFineRate?: number;  // Override premium fine rate for this library (₹/day)
-  membershipFee?: number;    // Override membership fee for this library (₹/year)
+  operatingHours: string;
+  closedDays: string[];
+  maxCapacity: number;
+  standardFineRate?: number;
+  premiumFineRate?: number;
+  membershipFee?: number;
   lastUpdated: string;
   updatedBy: string;
+}
+
+/** Issued library card for a registered citizen */
+export interface LibraryCard {
+  cardId: string;          // unique card number e.g. LMS-2026-000001
+  userId: string;
+  memberName: string;
+  email: string;
+  mobile: string;
+  address: string;
+  dateOfBirth: string;
+  photoUrl: string;        // base64 data URL from camera/upload
+  libraryIds: string[];    // libraries this card grants access to
+  planId: string;
+  planName: string;
+  billingCycle: 'monthly' | 'yearly';
+  amountPaid: number;
+  issueDate: string;
+  expiryDate: string;
+  status: 'active' | 'pending_payment' | 'expired';
+  /** JSON-encoded payload stored in the QR code */
+  qrPayload: string;
 }

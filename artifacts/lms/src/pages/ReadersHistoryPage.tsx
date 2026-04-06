@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { members, checkInRecords, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Search, History, Calendar } from 'lucide-react';
+import { fmtDateTime } from '@/lib/formatDate';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
@@ -12,6 +13,15 @@ export default function ReadersHistoryPage() {
   const { user, selectedLibrary } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [allRecords, setAllRecords] = useState<any[]>([]);
+  const [allLibraries, setAllLibraries] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.libraries.list().then(setAllLibraries).catch(console.error);
+    const params: Record<string, string> = {};
+    if (selectedLibrary) params.libraryId = selectedLibrary;
+    api.checkIns.list(params).then(setAllRecords).catch(console.error);
+  }, [selectedLibrary]);
 
   if (!user || user.role === 'citizen') {
     return (
@@ -30,29 +40,20 @@ export default function ReadersHistoryPage() {
     );
   }
 
-  const libraryRecords = useMemo(() => {
-    if (!selectedLibrary) return [];
-    return checkInRecords.filter(r => r.libraryId === selectedLibrary);
-  }, [selectedLibrary]);
+  const libraryRecords = allRecords;
 
   const filteredRecords = useMemo(() => {
     return libraryRecords.filter(record => {
-      const member = members.find(m => m.id === record.memberId);
-      if (!member) return false;
-
-      const matchesSearch = !searchQuery || 
-        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.membershipId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchQuery.toLowerCase());
-
+      const matchesSearch = !searchQuery ||
+        (record.user?.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (record.user?.email ?? '').toLowerCase().includes(searchQuery.toLowerCase());
       if (!dateFilter) return matchesSearch;
-
       const recordDate = new Date(record.checkInTime).toISOString().split('T')[0];
       return matchesSearch && recordDate === dateFilter;
     });
   }, [libraryRecords, searchQuery, dateFilter]);
 
-  const selectedBranch = libraryBranches.find(b => b.id === selectedLibrary);
+  const selectedBranch = allLibraries.find(b => b.id === selectedLibrary);
 
   const stats = useMemo(() => {
     const totalVisits = libraryRecords.length;
@@ -155,7 +156,6 @@ export default function ReadersHistoryPage() {
                       </TableHeader>
                       <TableBody>
                         {filteredRecords.map(record => {
-                          const member = members.find(m => m.id === record.memberId);
                           const checkInTime = new Date(record.checkInTime);
                           const checkOutTime = record.checkOutTime ? new Date(record.checkOutTime) : null;
                           
@@ -171,15 +171,13 @@ export default function ReadersHistoryPage() {
                             <TableRow key={record.id}>
                               <TableCell>
                                 <div>
-                                  <p className="font-medium text-sm">{member?.name}</p>
-                                  <p className="text-xs text-muted-foreground">{member?.email}</p>
+                                  <p className="font-medium text-sm">{record.user?.name ?? '—'}</p>
+                                  <p className="text-xs text-muted-foreground">{record.user?.email}</p>
                                 </div>
                               </TableCell>
-                              <TableCell className="font-mono text-sm">{member?.membershipId}</TableCell>
-                              <TableCell className="text-sm">{checkInTime.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
-                              <TableCell className="text-sm">
-                                {checkOutTime ? checkOutTime.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '—'}
-                              </TableCell>
+                              <TableCell className="font-mono text-sm">{record.user?.id?.slice(0, 8) ?? '—'}</TableCell>
+                              <TableCell className="text-sm">{fmtDateTime(record.checkInTime)}</TableCell>
+                              <TableCell className="text-sm">{checkOutTime ? fmtDateTime(record.checkOutTime) : '—'}</TableCell>
                               <TableCell className="text-sm">{duration || '—'}</TableCell>
                               <TableCell>
                                 <Badge className={checkOutTime ? 'bg-success/15 text-success border-0' : 'bg-warning/15 text-warning border-0'}>

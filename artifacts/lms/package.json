@@ -74,5 +74,10 @@
     "vite": "^7.3.0",
     "wouter": "^3.3.5",
     "zod": "^3.25.76"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1",
+    "qrcode": "^1.5.4",
+    "react-qr-code": "^2.0.18"
   }
 }

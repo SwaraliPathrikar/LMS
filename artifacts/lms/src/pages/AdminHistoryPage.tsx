@@ -1,17 +1,20 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { circulationTransactions, books, members, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fmtDate } from '@/lib/formatDate';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function AdminHistoryPage() {
   const { user, selectedLibrary, setSelectedLibrary } = useAuth();
   const navigate = useNavigate();
+  const [history, setHistory] = useState<any[]>([]);
+  const [libraries, setLibraries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   if (!user) {
     navigate('/login');
@@ -38,25 +41,36 @@ export default function AdminHistoryPage() {
     );
   }
 
-  const history = useMemo(() => {
-    let result = circulationTransactions.filter(t => t.status === 'returned' || t.status === 'lost');
-    if (isLibrarian && selectedLibrary) {
-      result = result.filter(t => t.libraryId === selectedLibrary);
-    }
-    return result;
-  }, [isLibrarian, selectedLibrary]);
+  useEffect(() => {
+    api.libraries.list().then(setLibraries).catch(console.error);
+  }, []);
 
-  const stats = useMemo(() => {
-    return {
-      returned: history.filter(t => t.status === 'returned').length,
-      lost: history.filter(t => t.status === 'lost').length,
-      totalFines: history.reduce((sum, t) => sum + t.fineAmount, 0),
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setLoading(true);
+        const params: Record<string, string> = { status: 'returned' };
+        if (selectedLibrary) params.libraryId = selectedLibrary;
+        const data = await api.borrow.list(params);
+        setHistory(data.requests ?? data);
+      } catch (e) {
+        console.error('Failed to load history', e);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [history]);
+    fetchHistory();
+  }, [selectedLibrary]);
 
-  const getBookTitle = (bookId: string) => books.find(b => b.id === bookId)?.title || 'Unknown';
-  const getMemberName = (memberId: string) => members.find(m => m.id === memberId)?.name || 'Unknown';
-  const getLibraryName = (libraryId: string) => libraryBranches.find(l => l.id === libraryId)?.name || 'Unknown';
+  const stats = useMemo(() => ({
+    returned: history.filter(t => t.status === 'returned').length,
+    lost: history.filter(t => t.status === 'lost').length,
+    totalFines: 0,
+  }), [history]);
+
+  const getBookTitle = (req: any) => req.book?.title || 'Unknown';
+  const getMemberName = (req: any) => req.user?.name || 'Unknown';
+  const getLibraryName = (req: any) => req.library?.name || 'Unknown';
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -74,7 +88,6 @@ export default function AdminHistoryPage() {
           <p className="text-muted-foreground mt-1">View historical circulation records and completed transactions</p>
         </div>
 
-        {/* Library Selection for Admin */}
         {isAdmin && (
           <div className="max-w-xs">
             <label className="text-sm font-medium mb-2 block">Select Library</label>
@@ -83,7 +96,7 @@ export default function AdminHistoryPage() {
                 <SelectValue placeholder="Select a library..." />
               </SelectTrigger>
               <SelectContent>
-                {libraryBranches.map(lib => (
+                {libraries.map(lib => (
                   <SelectItem key={lib.id} value={lib.id}>
                     {lib.name}
                   </SelectItem>
@@ -127,7 +140,9 @@ export default function AdminHistoryPage() {
             <CardTitle>Transaction History ({history.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            {history.length === 0 ? (
+            {loading ? (
+              <p className="text-muted-foreground text-center py-8">Loading...</p>
+            ) : history.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No history records</p>
             ) : (
               <div className="overflow-x-auto">
@@ -137,26 +152,24 @@ export default function AdminHistoryPage() {
                       <th className="text-left py-3 px-4 font-semibold">Member</th>
                       <th className="text-left py-3 px-4 font-semibold">Book</th>
                       <th className="text-left py-3 px-4 font-semibold">Library</th>
-                      <th className="text-left py-3 px-4 font-semibold">Issue Date</th>
+                      <th className="text-left py-3 px-4 font-semibold">Request Date</th>
                       <th className="text-left py-3 px-4 font-semibold">Return Date</th>
                       <th className="text-left py-3 px-4 font-semibold">Status</th>
-                      <th className="text-left py-3 px-4 font-semibold">Fine</th>
                     </tr>
                   </thead>
                   <tbody>
                     {history.map(trans => (
                       <tr key={trans.id} className="border-b hover:bg-secondary/50">
-                        <td className="py-3 px-4 font-medium">{getMemberName(trans.memberId)}</td>
-                        <td className="py-3 px-4">{getBookTitle(trans.bookId)}</td>
-                        <td className="py-3 px-4 text-xs">{getLibraryName(trans.libraryId)}</td>
-                        <td className="py-3 px-4 text-xs">{trans.issueDate}</td>
-                        <td className="py-3 px-4 text-xs">{trans.returnDate || '-'}</td>
+                        <td className="py-3 px-4 font-medium">{getMemberName(trans)}</td>
+                        <td className="py-3 px-4">{getBookTitle(trans)}</td>
+                        <td className="py-3 px-4 text-xs">{getLibraryName(trans)}</td>
+                        <td className="py-3 px-4 text-xs">{fmtDate(trans.requestDate)}</td>
+                        <td className="py-3 px-4 text-xs">{trans.returnDate ? fmtDate(trans.returnDate) : '—'}</td>
                         <td className="py-3 px-4">
                           <Badge className={getStatusColor(trans.status)}>
                             {trans.status}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4 font-semibold">₹{trans.fineAmount}</td>
                       </tr>
                     ))}
                   </tbody>

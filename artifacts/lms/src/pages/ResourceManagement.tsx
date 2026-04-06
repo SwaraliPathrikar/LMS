@@ -1,17 +1,20 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBooks } from '@/contexts/BooksContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Plus, Edit, Trash2, Search, Filter, BookOpen } from 'lucide-react';
-import { books } from '@/data/mockData';
+import { Plus, Edit, Trash2, Search, BookOpen } from 'lucide-react';
+import * as api from '@/lib/api';
 import { canAccessFeature } from '@/lib/rbac';
+import { toast } from 'sonner';
 
 export default function ResourceManagement() {
   const { user } = useAuth();
+  const { books, updateBook, refetch } = useBooks();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -27,17 +30,21 @@ export default function ResourceManagement() {
     );
   }
 
-  // Filter resources based on search query and type
   const filteredResources = useMemo(() => {
     return books.filter(book => {
       const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           book.isbn.includes(searchQuery);
-      
+                           (book.isbn ?? '').includes(searchQuery);
       if (filterType === 'all') return matchesSearch;
-      return matchesSearch && book.issueTypes.includes(filterType);
+      return matchesSearch && (book.issueTypes ?? []).includes(filterType as any);
     });
-  }, [searchQuery, filterType]);
+  }, [searchQuery, filterType, books]);
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Delete "${title}"?`)) return;
+    try { await api.books.delete(id); await refetch(); toast.success('Book deleted'); }
+    catch (e: any) { toast.error(e.message); }
+  };
 
   const getStatusColor = (accessType: string) => {
     return accessType === 'public' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
@@ -133,10 +140,10 @@ export default function ResourceManagement() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" title="Edit resource">
+                      <Button variant="ghost" size="sm" title="Edit resource" onClick={() => navigate(`/resources/add`)}>
                         <Edit size={16} />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600" title="Delete resource">
+                      <Button variant="ghost" size="sm" className="text-red-600" title="Delete resource" onClick={() => handleDelete(resource.id, resource.title)}>
                         <Trash2 size={16} />
                       </Button>
                     </div>

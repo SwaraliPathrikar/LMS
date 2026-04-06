@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBooks } from '@/contexts/BooksContext';
+import * as api from '@/lib/api';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,13 +14,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Upload, X, AlertTriangle, AlertCircle } from 'lucide-react';
-import { libraryBranches, genres } from '@/data/mockData';
+import { genres } from '@/data/mockData';
 import { toast } from 'sonner';
 
 export default function AddResource() {
   const { user, selectedLibrary } = useAuth();
-  const { books, addBook } = useBooks();
+  const { addBook, refetch } = useBooks();
   const navigate = useNavigate();
+  const [allLibraries, setAllLibraries] = useState<any[]>([]);
+
+  useEffect(() => { api.libraries.list().then(setAllLibraries).catch(console.error); }, []);
   
   // Check access - only admin and librarian can add resources
   if (!user || (user.role !== 'admin' && user.role !== 'librarian')) {
@@ -125,87 +129,83 @@ export default function AddResource() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (keywords.length < 5) {
       toast.error('Please add at least 5 keywords for better searchability');
       return;
     }
 
-    // Simulate conflict detection
-    const existingBook = books.find(b => b.title.toLowerCase() === title.toLowerCase());
-    if (existingBook && selectedLibraries.length > 0) {
-      setConflictLibrary(libraryBranches.find(l => l.id === selectedLibraries[0])?.name || '');
-      setShowConflict(true);
-      return;
+    try {
+      // Upload cover image if provided
+      let coverImageUrl: string | undefined;
+      if (coverImage && coverImage.startsWith('data:')) {
+        const blob = await (await fetch(coverImage)).blob();
+        const file = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+        const uploaded = await api.upload.photo(file);
+        coverImageUrl = uploaded.url;
+      }
+
+      // Upload PDF if provided
+      let fileUrl: string | undefined;
+      if (pdfFile && pdfFile.startsWith('data:')) {
+        const blob = await (await fetch(pdfFile)).blob();
+        const file = new File([blob], pdfFileName || 'book.pdf', { type: 'application/pdf' });
+        const uploaded = await api.upload.media(file);
+        fileUrl = uploaded.url;
+      }
+
+      // Create book via API
+      const newBook = await addBook({
+        title, author, isbn, genre, keywords,
+        coverImageUrl,
+        fileUrl,
+        issueTypes: Object.keys(issueTypes).filter(k => issueTypes[k]) as any[],
+        accessType: accessType === 'public' ? 'open' : 'restricted',
+        categories: Object.keys(accessConfig).filter(k => accessConfig[k as keyof typeof accessConfig]) as any[],
+        cost: accessConfig.payable ? parseInt(cost) || 0 : undefined,
+        borrowPeriodDays: parseInt(borrowPeriod),
+        downloadCount: 0,
+        language,
+        publishedYear: parseInt(year) || new Date().getFullYear(),
+        pages: parseInt(pages) || 0,
+        description,
+        accessibilityFeatures: accessibilityFeatures as any[],
+      });
+
+      // Set inventory for selected libraries
+      const libsToAssign = user?.role === 'librarian' && selectedLibrary
+        ? [selectedLibrary]
+        : selectedLibraries;
+
+      for (const libraryId of libsToAssign) {
+        await api.books.updateInventory(newBook.id, {
+          libraryId,
+          totalCount: parseInt(quantity) || 1,
+          availableCount: parseInt(quantity) || 1,
+        });
+      }
+
+      await refetch();
+      toast.success('Resource added successfully!');
+
+      // Reset form
+      setTitle(''); setAuthor(''); setIsbn(''); setGenre(''); setLanguage('English');
+      setYear(''); setPages(''); setDescription(''); setKeywords([]); setKeywordInput('');
+      setIssueTypes({ physical: false, pdf: false, audiobook: false, movie: false, mp4: false, accessibility: false, 'e-document': false, 'content-file': false, article: false, 'news-item': false, 'loose-issue': false, 'internet-resource': false });
+      setAccessConfig({ free: false, payable: false }); setCost(''); setAccessType('public');
+      setBorrowPeriod('14'); setSelectedLibraries([]); setQuantity('1');
+      setCoverImage(null); setCoverImageName(''); setPdfFile(null); setPdfFileName('');
+      setAccessibilityFeatures([]);
+    } catch (err: any) {
+      toast.error(err.message ?? 'Failed to add resource');
     }
-
-    // Create new book object
-    const newBook = {
-      id: `b${Date.now()}`,
-      title,
-      author,
-      isbn,
-      genre,
-      keywords,
-      coverImage: coverImage || undefined,
-      pdfUrl: pdfFile || undefined,
-      issueTypes: (Object.keys(issueTypes).filter(k => issueTypes[k]) as any[]),
-      accessType: accessType,
-      category: Object.keys(accessConfig).filter(k => accessConfig[k as keyof typeof accessConfig]) as any[],
-      cost: accessConfig.payable ? parseInt(cost) || 0 : undefined,
-      borrowPeriodDays: parseInt(borrowPeriod),
-      downloadCount: 0,
-      publisher: '',
-      language,
-      publishedYear: parseInt(year) || new Date().getFullYear(),
-      pages: parseInt(pages) || 0,
-      description,
-      accessibilityFeatures: accessibilityFeatures as any,
-    };
-
-    // Add book to books array using context
-    addBook(newBook);
-
-    // For librarians, auto-select their library
-    if (user.role === 'librarian' && selectedLibrary) {
-      setSelectedLibraries([selectedLibrary]);
-    }
-
-    // Reset form
-    setTitle('');
-    setAuthor('');
-    setIsbn('');
-    setGenre('');
-    setLanguage('English');
-    setYear('');
-    setPages('');
-    setDescription('');
-    setKeywords([]);
-    setKeywordInput('');
-    setIssueTypes({ physical: false, pdf: false, audiobook: false, movie: false, mp4: false, accessibility: false, 'e-document': false, 'content-file': false, article: false, 'news-item': false, 'loose-issue': false, 'internet-resource': false });
-    setAccessConfig({ free: false, payable: false });
-    setCost('');
-    setAccessType('public');
-    setBorrowPeriod('14');
-    setSelectedLibraries([]);
-    setQuantity('1');
-    setCoverImage(null);
-    setCoverImageName('');
-    setPdfFile(null);
-    setPdfFileName('');
-    setAccessibilityFeatures([]);
-
-    toast.success('Resource added successfully to selected libraries!');
   };
 
   const handleConflictResolve = (increaseCount: boolean) => {
     setShowConflict(false);
-    if (increaseCount) {
-      toast.success('Book count increased in the existing inventory');
-    } else {
-      toast.info('Skipped duplicate entry');
-    }
+    if (increaseCount) toast.success('Book count increased');
+    else toast.info('Skipped duplicate entry');
   };
 
   const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -486,7 +486,7 @@ export default function AddResource() {
                   {user.role === 'admin' ? (
                     <>
                       <p className="text-sm text-muted-foreground mb-3">Select libraries to add this book:</p>
-                      {libraryBranches.map(lib => (
+                      {allLibraries.map(lib => (
                         <label key={lib.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary cursor-pointer">
                           <Checkbox checked={selectedLibraries.includes(lib.id)} onCheckedChange={() => toggleLibrary(lib.id)} />
                           <div>
@@ -500,8 +500,8 @@ export default function AddResource() {
                     <div className="p-4 rounded-lg bg-secondary/50 border border-secondary">
                       <p className="text-sm font-medium mb-2">Your Library:</p>
                       <div className="p-3 rounded-lg bg-background border border-accent/50">
-                        <p className="text-sm font-semibold">{libraryBranches.find(l => l.id === selectedLibrary)?.name}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{libraryBranches.find(l => l.id === selectedLibrary)?.address}</p>
+                        <p className="text-sm font-semibold">{allLibraries.find(l => l.id === selectedLibrary)?.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{allLibraries.find(l => l.id === selectedLibrary)?.address}</p>
                       </div>
                       <p className="text-xs text-muted-foreground mt-3">As a librarian, you can only add books to your assigned library.</p>
                     </div>

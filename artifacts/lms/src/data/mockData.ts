@@ -1,4 +1,5 @@
-import { Department, LibraryBranch, Book, BookInventory, Member, BorrowRequest, Fine, CheckInRecord, User, Event, EventRegistration, DigitalResource, DownloadLog, CirculationTransaction, Renewal, Notification, SystemSettings, LibrarySettings } from '@/types/library';
+import { Department, LibraryBranch, Book, BookInventory, Member, BorrowRequest, Fine, CheckInRecord, User, Event, EventRegistration, DigitalResource, DownloadLog, CirculationTransaction, Renewal, Notification, SystemSettings, LibrarySettings, MembershipPlan, LibraryCard } from '@/types/library';
+import { hashPasswordSync } from '@/lib/security';
 
 
 export interface UserCredential extends User {
@@ -8,17 +9,17 @@ export interface UserCredential extends User {
 
 export const users: UserCredential[] = [
   // ADMIN
-  { id: 'u1', name: 'Admin', email: 'admin@corp.gov.in', role: 'admin', password: 'admin@123', avatar: '' },
+  { id: 'u1', name: 'Admin', email: 'admin@corp.gov.in', role: 'admin', password: hashPasswordSync('admin@123'), avatar: '' },
 
   // LIBRARIANS (each assigned to a specific library)
-  { id: 'u2', name: 'Dr. Meera Kulkarni', email: 'meera.kulkarni@lib.gov.in', role: 'librarian', password: 'librarian@123', libraryId: 'lib1', avatar: '' },
-  { id: 'u3', name: 'Shri. Ramesh Patil', email: 'ramesh.patil@lib.gov.in', role: 'librarian', password: 'librarian@456', libraryId: 'lib2', avatar: '' },
-  { id: 'u4', name: 'Smt. Anita Joshi', email: 'anita.joshi@lib.gov.in', role: 'librarian', password: 'librarian@789', libraryId: 'lib3', avatar: '' },
+  { id: 'u2', name: 'Dr. Meera Kulkarni', email: 'meera.kulkarni@lib.gov.in', role: 'librarian', password: hashPasswordSync('librarian@123'), libraryId: 'lib1', avatar: '' },
+  { id: 'u3', name: 'Shri. Ramesh Patil', email: 'ramesh.patil@lib.gov.in', role: 'librarian', password: hashPasswordSync('librarian@456'), libraryId: 'lib2', avatar: '' },
+  { id: 'u4', name: 'Smt. Anita Joshi', email: 'anita.joshi@lib.gov.in', role: 'librarian', password: hashPasswordSync('librarian@789'), libraryId: 'lib3', avatar: '' },
 
   // CITIZENS
-  { id: 'u5', name: 'Rajesh Sharma', email: 'rajesh@email.com', role: 'citizen', password: 'citizen@123', avatar: '' },
-  { id: 'u6', name: 'Priya Desai', email: 'priya@email.com', role: 'citizen', password: 'citizen@456', avatar: '' },
-  { id: 'u7', name: 'Amit Kulkarni', email: 'amit@email.com', role: 'citizen', password: 'citizen@789', avatar: '' },
+  { id: 'u5', name: 'Rajesh Sharma', email: 'rajesh@email.com', role: 'citizen', password: hashPasswordSync('citizen@123'), avatar: '' },
+  { id: 'u6', name: 'Priya Desai', email: 'priya@email.com', role: 'citizen', password: hashPasswordSync('citizen@456'), avatar: '' },
+  { id: 'u7', name: 'Amit Kulkarni', email: 'amit@email.com', role: 'citizen', password: hashPasswordSync('citizen@789'), avatar: '' },
 ];
 
 export const mockUser: User = {
@@ -39,12 +40,12 @@ export const departments: Department[] = [
 ];
 
 export let libraryBranches: LibraryBranch[] = [
-  { id: 'lib1', name: 'Central Municipal Library', departmentId: 'edu', address: 'Shivaji Chowk, Nanded - 431601', lat: 19.1383, lng: 77.3210, mapLink: 'https://maps.app.goo.gl/VZdH6ZdSisofPfu99', phone: '+91 2462 253 1234', librarian: 'Lib: Dr. Meera Kulkarni' },
-  { id: 'lib2', name: 'Vazirabad Branch Library', departmentId: 'edu', address: 'Vazirabad, Nanded - 431602', lat: 19.1520, lng: 77.3150, mapLink: 'https://maps.app.goo.gl/MKSMHNahPo3xCaEM8', phone: '+91 2462 267 5678', librarian: 'Lib: Shri. Ramesh Patil' },
-  { id: 'lib3', name: 'Taroda Reading Center', departmentId: 'edu', address: 'Taroda, Nanded - 431605', lat: 19.1250, lng: 77.2980, mapLink: 'https://maps.app.goo.gl/FjYhtxPyWqpoRwJp7', phone: '+91 2462 246 9012', librarian: 'Lib: Smt. Anita Joshi' },
-  { id: 'lib4', name: 'Vishnupuri Community Library', departmentId: 'edu', address: 'Vishnupuri, Nanded - 431606', lat: 19.1450, lng: 77.3350, mapLink: 'https://maps.app.goo.gl/yVW8FrFMsqRKCaoT9', phone: '+91 2462 287 3456', librarian: 'Lib: Shri. Vijay More' },
-  { id: 'lib5', name: 'MIDC Digital Library', departmentId: 'tech', address: 'MIDC Area, Nanded - 431603', lat: 19.1600, lng: 77.3100, mapLink: 'https://maps.app.goo.gl/mFusMFVPzYdi2Bp17', phone: '+91 2462 242 7890', librarian: 'Lib: Dr. Sunil Deshmukh' },
-  { id: 'lib6', name: 'Government Records Archive', departmentId: 'gov', address: 'District Collectorate, Nanded - 431601', lat: 19.1502, lng: 77.3188, mapLink: 'https://maps.app.goo.gl/3unzuCNm7oMrwET96', phone: '+91 2462 212 0123', librarian: 'Lib: Shri. Prakash Gaikwad' },
+  { id: 'lib1', name: 'Central Municipal Library', departmentId: 'edu', address: 'Shivaji Chowk, Nanded - 431601', mapLink: 'https://maps.app.goo.gl/VZdH6ZdSisofPfu99', phone: '+91 2462 253 1234', librarian: 'Lib: Dr. Meera Kulkarni' },
+  { id: 'lib2', name: 'Vazirabad Branch Library', departmentId: 'edu', address: 'Vazirabad, Nanded - 431602', mapLink: 'https://maps.app.goo.gl/MKSMHNahPo3xCaEM8', phone: '+91 2462 267 5678', librarian: 'Lib: Shri. Ramesh Patil' },
+  { id: 'lib3', name: 'Taroda Reading Center', departmentId: 'edu', address: 'Taroda, Nanded - 431605', mapLink: 'https://maps.app.goo.gl/FjYhtxPyWqpoRwJp7', phone: '+91 2462 246 9012', librarian: 'Lib: Smt. Anita Joshi' },
+  { id: 'lib4', name: 'Vishnupuri Community Library', departmentId: 'edu', address: 'Vishnupuri, Nanded - 431606', mapLink: 'https://maps.app.goo.gl/yVW8FrFMsqRKCaoT9', phone: '+91 2462 287 3456', librarian: 'Lib: Shri. Vijay More' },
+  { id: 'lib5', name: 'MIDC Digital Library', departmentId: 'tech', address: 'MIDC Area, Nanded - 431603', mapLink: 'https://maps.app.goo.gl/mFusMFVPzYdi2Bp17', phone: '+91 2462 242 7890', librarian: 'Lib: Dr. Sunil Deshmukh' },
+  { id: 'lib6', name: 'Government Records Archive', departmentId: 'gov', address: 'District Collectorate, Nanded - 431601', mapLink: 'https://maps.app.goo.gl/3unzuCNm7oMrwET96', phone: '+91 2462 212 0123', librarian: 'Lib: Shri. Prakash Gaikwad' },
 ];
 
 // Helper function to generate book cover images - returns undefined to use SVG fallback
@@ -285,11 +286,11 @@ export const eventRegistrations: EventRegistration[] = [
 ];
 
 export const digitalResources: DigitalResource[] = [
-  { id: 'dr1', title: 'Indian Constitution', author: 'Government of India', type: 'pdf', description: 'Complete Indian Constitution document', accessType: 'open', downloadCount: 2340, fileSize: 5.2, uploadDate: '2025-01-15', keywords: ['constitution', 'law', 'india', 'governance', 'rights'], language: 'English' },
-  { id: 'dr2', title: 'Wings of Fire', author: 'Dr. APJ Abdul Kalam', type: 'audiobook', description: 'Audiobook version of Wings of Fire autobiography', accessType: 'restricted', downloadCount: 890, fileSize: 450, uploadDate: '2025-02-20', keywords: ['autobiography', 'inspiration', 'science', 'india', 'kalam'], language: 'English' },
-  { id: 'dr3', title: 'Digital India Initiative', author: 'Ministry of Electronics', type: 'video', description: 'Documentary on Digital India program', accessType: 'open', downloadCount: 1560, fileSize: 1200, uploadDate: '2025-03-01', keywords: ['digital', 'india', 'technology', 'governance', 'innovation'], language: 'English' },
-  { id: 'dr4', title: 'AI in Libraries', author: 'Dr. Sharma', authors: ['Dr. Sharma', 'Prof. Rajesh Kumar', 'Dr. Anita Patel'], type: 'research_paper', description: 'Academic research on AI applications in library systems', accessType: 'restricted', downloadCount: 340, fileSize: 2.8, uploadDate: '2025-02-10', publishedYear: 2024, keywords: ['ai', 'libraries', 'technology', 'research', 'automation'], language: 'English', researchDomain: 'Artificial Intelligence', researchField: 'Library Science & Technology' },
-  { id: 'dr5', title: 'Yoga Sutras', author: 'Patanjali', type: 'audiobook', description: 'Classical yoga philosophy in audio format', accessType: 'open', downloadCount: 1200, fileSize: 380, uploadDate: '2025-01-25', keywords: ['yoga', 'meditation', 'wellness', 'spirituality', 'health'], language: 'English' },
+  { id: 'dr1', title: 'Indian Constitution', author: 'Government of India', type: 'pdf', description: 'Complete Indian Constitution document', accessType: 'open', downloadCount: 2340, fileSize: 5.2, uploadDate: '2025-01-15', keywords: ['constitution', 'law', 'india', 'governance', 'rights'], language: 'English', fileUrl: 'https://www.w3.org/WAI/WCAG21/wcag21.pdf' },
+  { id: 'dr2', title: 'Wings of Fire', author: 'Dr. APJ Abdul Kalam', type: 'audiobook', description: 'Audiobook version of Wings of Fire autobiography', accessType: 'restricted', downloadCount: 890, fileSize: 450, uploadDate: '2025-02-20', keywords: ['autobiography', 'inspiration', 'science', 'india', 'kalam'], language: 'English', fileUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { id: 'dr3', title: 'Digital India Initiative', author: 'Ministry of Electronics', type: 'video', description: 'Documentary on Digital India program', accessType: 'open', downloadCount: 1560, fileSize: 1200, uploadDate: '2025-03-01', keywords: ['digital', 'india', 'technology', 'governance', 'innovation'], language: 'English', fileUrl: 'https://www.w3.org/2010/05/video/mediaevents.html' },
+  { id: 'dr4', title: 'AI in Libraries', author: 'Dr. Sharma', authors: ['Dr. Sharma', 'Prof. Rajesh Kumar', 'Dr. Anita Patel'], type: 'research_paper', description: 'Academic research on AI applications in library systems', accessType: 'restricted', downloadCount: 340, fileSize: 2.8, uploadDate: '2025-02-10', publishedYear: 2024, keywords: ['ai', 'libraries', 'technology', 'research', 'automation'], language: 'English', researchDomain: 'Artificial Intelligence', researchField: 'Library Science & Technology', fileUrl: 'https://www.w3.org/WAI/WCAG21/wcag21.pdf' },
+  { id: 'dr5', title: 'Yoga Sutras', author: 'Patanjali', type: 'audiobook', description: 'Classical yoga philosophy in audio format', accessType: 'open', downloadCount: 1200, fileSize: 380, uploadDate: '2025-01-25', keywords: ['yoga', 'meditation', 'wellness', 'spirituality', 'health'], language: 'English', fileUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
 ];
 
 export const downloadLogs: DownloadLog[] = [
@@ -1113,3 +1114,58 @@ export const getDashboardAlerts = () => {
   const pendingReservations = borrowRequests.filter(br => br.status === 'pending').length;
   return { overdue, lowStock, pendingReservations };
 };
+
+// ============================================================================
+// MEMBERSHIP PLANS
+// ============================================================================
+
+export let membershipPlans: MembershipPlan[] = [
+  { id: 'plan-standard', name: 'Standard', description: 'Basic access to all library branches', monthlyPrice: 50, yearlyPrice: 500, maxBooks: 3, color: 'gray', libraryIds: [] },
+  { id: 'plan-premium', name: 'Premium', description: 'Priority access, higher borrow limits', monthlyPrice: 120, yearlyPrice: 1200, maxBooks: 8, color: 'gold', libraryIds: [] },
+  { id: 'plan-student', name: 'Student', description: 'Discounted plan for students with valid ID', monthlyPrice: 30, yearlyPrice: 300, maxBooks: 5, color: 'blue', libraryIds: [] },
+  { id: 'plan-senior', name: 'Senior', description: 'Discounted plan for senior citizens (60+)', monthlyPrice: 25, yearlyPrice: 250, maxBooks: 4, color: 'green', libraryIds: [] },
+];
+
+export const addMembershipPlan = (plan: Omit<MembershipPlan, 'id'>): MembershipPlan => {
+  const newPlan: MembershipPlan = { ...plan, id: `plan-${Date.now()}` };
+  membershipPlans.push(newPlan);
+  return newPlan;
+};
+
+export const updateMembershipPlan = (id: string, updates: Partial<Omit<MembershipPlan, 'id'>>) => {
+  const idx = membershipPlans.findIndex(p => p.id === id);
+  if (idx !== -1) membershipPlans[idx] = { ...membershipPlans[idx], ...updates };
+};
+
+export const deleteMembershipPlan = (id: string) => {
+  const idx = membershipPlans.findIndex(p => p.id === id);
+  if (idx !== -1) membershipPlans.splice(idx, 1);
+};
+
+/** Returns plans applicable to a given library (global plans + library-specific plans). */
+export const getPlansForLibrary = (libraryId: string): MembershipPlan[] => {
+  return membershipPlans.filter(p => p.libraryIds.length === 0 || p.libraryIds.includes(libraryId));
+};
+
+// ============================================================================
+// LIBRARY CARDS
+// ============================================================================
+
+export let libraryCards: LibraryCard[] = [];
+
+let cardCounter = 1;
+
+export const generateCardId = (): string => {
+  const year = new Date().getFullYear();
+  const seq = String(cardCounter++).padStart(6, '0');
+  return `LMS-${year}-${seq}`;
+};
+
+export const issueLibraryCard = (card: Omit<LibraryCard, 'cardId'>): LibraryCard => {
+  const newCard: LibraryCard = { ...card, cardId: generateCardId() };
+  libraryCards.push(newCard);
+  return newCard;
+};
+
+export const getCardByUserId = (userId: string): LibraryCard | undefined =>
+  libraryCards.find(c => c.userId === userId);

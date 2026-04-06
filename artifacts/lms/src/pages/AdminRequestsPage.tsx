@@ -1,20 +1,22 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { borrowRequests, books, members } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, XCircle, Clock, AlertCircle, Mail } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { fmtDate, fmtDateTime } from '@/lib/formatDate';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function AdminRequestsPage() {
-  const { user } = useAuth();
+  const { user, selectedLibrary } = useAuth();
   const navigate = useNavigate();
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -42,42 +44,32 @@ export default function AdminRequestsPage() {
     );
   }
 
-  const pending = borrowRequests.filter(r => r.status === 'pending');
-  const approved = borrowRequests.filter(r => r.status === 'approved');
-  const rejected = borrowRequests.filter(r => r.status === 'rejected');
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const params: Record<string, string> = {};
+      if (selectedLibrary) params.libraryId = selectedLibrary;
+      const data = await api.borrow.list(params);
+      setRequests(data.requests ?? data);
+    } catch (e) {
+      console.error('Failed to load borrow requests', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const getBookTitle = (bookId: string) => books.find(b => b.id === bookId)?.title || 'Unknown';
-  const getMemberName = (userId: string) => members.find(m => m.id === userId)?.name || 'Unknown';
+  useEffect(() => { fetchRequests(); }, [selectedLibrary]);
 
-  const handleApprove = () => {
-    const request = borrowRequests.find(r => r.id === selectedRequest.id);
-    if (request) {
-      const book = books.find(b => b.id === request.bookId);
-      
-      request.status = 'approved';
-      request.responseDate = new Date().toISOString().split('T')[0];
-      request.notificationSent = true;
-      
-      // Create in-app notification
-      const newNotification = {
-        id: `n${Date.now()}`,
-        userId: request.userId,
-        type: 'approval' as const,
-        title: 'Borrow Request Approved',
-        message: `Your request for "${book?.title}" has been approved. You can now collect/access the book.`,
-        read: false,
-        createdAt: new Date().toISOString().split('T')[0],
-        channel: 'in_system' as const,
-        actionUrl: '/borrow-requests'
-      };
-      
-      // Add to notifications array
-      const { notifications } = require('@/data/mockData');
-      notifications.push(newNotification);
-      
-      // Simulate email notification
-      console.log(`📧 Email sent to ${request.email}: Your borrow request for "${book?.title}" has been approved!`);
-      
+  const pending = requests.filter(r => r.status === 'pending');
+  const approved = requests.filter(r => r.status === 'approved');
+  const rejected = requests.filter(r => r.status === 'rejected');
+
+  const getBookTitle = (req: any) => req.book?.title || 'Unknown';
+  const getMemberName = (req: any) => req.user?.name || 'Unknown';
+
+  const handleApprove = async () => {
+    try {
+      await api.borrow.approve(selectedRequest.id);
       toast.success(
         <div className="flex items-start gap-2">
           <CheckCircle className="w-5 h-5 text-success mt-0.5" />
@@ -87,48 +79,23 @@ export default function AdminRequestsPage() {
           </div>
         </div>
       );
+      await fetchRequests();
+    } catch (e: any) {
+      toast.error(e.message ?? 'Failed to approve request');
     }
-    
     setShowDialog(false);
     setSelectedRequest(null);
     setRejectionReason('');
+    setAction(null);
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) {
       toast.error('Please provide a rejection reason');
       return;
     }
-    
-    const request = borrowRequests.find(r => r.id === selectedRequest.id);
-    if (request) {
-      const book = books.find(b => b.id === request.bookId);
-      
-      request.status = 'rejected';
-      request.responseDate = new Date().toISOString().split('T')[0];
-      request.rejectionReason = rejectionReason;
-      request.notificationSent = true;
-      
-      // Create in-app notification
-      const newNotification = {
-        id: `n${Date.now()}`,
-        userId: request.userId,
-        type: 'approval' as const,
-        title: 'Borrow Request Rejected',
-        message: `Your request for "${book?.title}" has been rejected. Reason: ${rejectionReason}`,
-        read: false,
-        createdAt: new Date().toISOString().split('T')[0],
-        channel: 'in_system' as const,
-        actionUrl: '/borrow-requests'
-      };
-      
-      // Add to notifications array
-      const { notifications } = require('@/data/mockData');
-      notifications.push(newNotification);
-      
-      // Simulate email notification
-      console.log(`📧 Email sent to ${request.email}: Your borrow request for "${book?.title}" has been rejected. Reason: ${rejectionReason}`);
-      
+    try {
+      await api.borrow.reject(selectedRequest.id, rejectionReason);
       toast.info(
         <div className="flex items-start gap-2">
           <XCircle className="w-5 h-5 text-destructive mt-0.5" />
@@ -138,11 +105,14 @@ export default function AdminRequestsPage() {
           </div>
         </div>
       );
+      await fetchRequests();
+    } catch (e: any) {
+      toast.error(e.message ?? 'Failed to reject request');
     }
-    
     setShowDialog(false);
     setSelectedRequest(null);
     setRejectionReason('');
+    setAction(null);
   };
 
   return (
@@ -196,7 +166,9 @@ export default function AdminRequestsPage() {
             <CardTitle>Pending Requests ({pending.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            {pending.length === 0 ? (
+            {loading ? (
+              <p className="text-muted-foreground text-center py-8">Loading...</p>
+            ) : pending.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No pending requests</p>
             ) : (
               <div className="space-y-3">
@@ -206,8 +178,8 @@ export default function AdminRequestsPage() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="font-semibold text-sm">{getMemberName(req.userId)}</p>
-                            <p className="text-xs text-muted-foreground">{getBookTitle(req.bookId)}</p>
+                            <p className="font-semibold text-sm">{getMemberName(req)}</p>
+                            <p className="text-xs text-muted-foreground">{getBookTitle(req)}</p>
                           </div>
                           <Badge variant="outline">{req.issueType}</Badge>
                         </div>
@@ -218,7 +190,7 @@ export default function AdminRequestsPage() {
                           </div>
                           <div>
                             <p className="text-muted-foreground">Date</p>
-                            <p className="font-medium">{req.requestDate}</p>
+                            <p className="font-medium">{fmtDate(req.requestDate)}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Status</p>
@@ -232,6 +204,7 @@ export default function AdminRequestsPage() {
                         onClick={() => {
                           setSelectedRequest(req);
                           setShowDialog(true);
+                          setAction(null);
                         }}
                         className="w-full md:w-auto"
                       >
@@ -261,36 +234,34 @@ export default function AdminRequestsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-sm">{getMemberName(req.userId)}</p>
+                            <p className="font-semibold text-sm">{getMemberName(req)}</p>
                             <Badge className="bg-success/20 text-success border-0">Approved</Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground">{getBookTitle(req.bookId)}</p>
+                          <p className="text-xs text-muted-foreground">{getBookTitle(req)}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                         <div>
                           <p className="text-muted-foreground">Email</p>
-                          <p className="font-medium">{req.email}</p>
+                          <p className="font-medium">{req.user?.email}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Request Date</p>
-                          <p className="font-medium">{req.requestDate}</p>
+                          <p className="font-medium">{fmtDate(req.requestDate)}</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Approved Date</p>
-                          <p className="font-medium">{req.responseDate}</p>
+                          <p className="text-muted-foreground">Due Date</p>
+                          <p className="font-medium">{req.dueDate ? fmtDate(req.dueDate) : '—'}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Issue Type</p>
                           <p className="font-medium capitalize">{req.issueType}</p>
                         </div>
                       </div>
-                      {req.notificationSent && (
-                        <div className="flex items-center gap-1 text-xs text-success">
-                          <Mail size={12} />
-                          <span>Notification sent via email & in-app</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1 text-xs text-success">
+                        <Mail size={12} />
+                        <span>Notification sent via email & in-app</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -315,24 +286,24 @@ export default function AdminRequestsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-sm">{getMemberName(req.userId)}</p>
+                            <p className="font-semibold text-sm">{getMemberName(req)}</p>
                             <Badge className="bg-destructive/20 text-destructive border-0">Rejected</Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground">{getBookTitle(req.bookId)}</p>
+                          <p className="text-xs text-muted-foreground">{getBookTitle(req)}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                         <div>
                           <p className="text-muted-foreground">Email</p>
-                          <p className="font-medium">{req.email}</p>
+                          <p className="font-medium">{req.user?.email}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Request Date</p>
-                          <p className="font-medium">{req.requestDate}</p>
+                          <p className="font-medium">{fmtDate(req.requestDate)}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Rejected Date</p>
-                          <p className="font-medium">{req.responseDate}</p>
+                          <p className="font-medium">{req.responseDate ? fmtDate(req.responseDate) : '—'}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Issue Type</p>
@@ -345,12 +316,10 @@ export default function AdminRequestsPage() {
                           <p className="font-medium text-destructive">{req.rejectionReason}</p>
                         </div>
                       )}
-                      {req.notificationSent && (
-                        <div className="flex items-center gap-1 text-xs text-destructive">
-                          <Mail size={12} />
-                          <span>Notification sent via email & in-app</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1 text-xs text-destructive">
+                        <Mail size={12} />
+                        <span>Notification sent via email & in-app</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -369,15 +338,15 @@ export default function AdminRequestsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Member</p>
-                    <p className="font-semibold">{getMemberName(selectedRequest.userId)}</p>
+                    <p className="font-semibold">{getMemberName(selectedRequest)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-semibold">{selectedRequest.email}</p>
+                    <p className="font-semibold">{selectedRequest.user?.email}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Book</p>
-                    <p className="font-semibold">{getBookTitle(selectedRequest.bookId)}</p>
+                    <p className="font-semibold">{getBookTitle(selectedRequest)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Issue Type</p>

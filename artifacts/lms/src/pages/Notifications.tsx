@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { notifications } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import * as api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import {
   BookOpen, Users, RotateCcw, AlertTriangle, IndianRupee, UserPlus
 } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { fmtDateTime } from '@/lib/formatDate';
 
 // ── Icon + color maps ────────────────────────────────────────────────────────
 
@@ -87,8 +88,12 @@ const citizenPrefs = [
 export default function Notifications() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [allNotifications, setAllNotifications] = useState<any[]>([]);
   const [unreadOnly, setUnreadOnly] = useState(false);
+
+  useEffect(() => {
+    api.notifications.list().then(setAllNotifications).catch(console.error);
+  }, []);
 
   const isAdmin = user?.role === 'admin';
   const isLibrarian = user?.role === 'librarian';
@@ -99,14 +104,15 @@ export default function Notifications() {
   const navMap = isAdmin ? adminNavMap : isLibrarian ? librarianNavMap : {};
   const prefs = isStaff ? adminPrefs : citizenPrefs;
 
-  const userNotifications = useMemo(() => {
-    return notifications.filter(n => n.userId === user?.id && !deletedIds.has(n.id));
-  }, [user?.id, deletedIds]);
-
-  const unreadNotifications = useMemo(() => userNotifications.filter(n => !n.read), [userNotifications]);
+  const userNotifications = allNotifications;
+  const unreadNotifications = allNotifications.filter(n => !n.read);
   const displayNotifications = unreadOnly ? unreadNotifications : userNotifications;
 
-  const handleDelete = (id: string) => setDeletedIds(prev => new Set([...prev, id]));
+  const handleDelete = (id: string) => setAllNotifications(prev => prev.filter(n => n.id !== id));
+  const handleMarkRead = (id: string) => {
+    api.notifications.markRead(id).catch(console.error);
+    setAllNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
 
   const renderCard = (notification: typeof notifications[0]) => {
     const Icon = iconMap[notification.type] ?? Bell;
@@ -131,9 +137,9 @@ export default function Notifications() {
                 {!notification.read && <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-2" />}
               </div>
               <div className="flex items-center gap-3 mt-2">
-                <p className="text-xs text-muted-foreground">{notification.createdAt}</p>
+                <p className="text-xs text-muted-foreground">{fmtDateTime(notification.createdAt)}</p>
                 {actionPath && (
-                  <Button size="sm" variant="link" className="h-auto p-0 text-xs text-accent" onClick={() => navigate(actionPath)}>
+                  <Button size="sm" variant="link" className="h-auto p-0 text-xs text-accent" onClick={() => { handleMarkRead(notification.id); navigate(actionPath); }}>
                     View →
                   </Button>
                 )}

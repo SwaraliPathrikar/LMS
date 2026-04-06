@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBooks } from '@/contexts/BooksContext';
-import { bookInventory, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,17 @@ export default function AllResourcesPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [allLibraries, setAllLibraries] = useState<any[]>([]);
+  const [allInventory, setAllInventory] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.libraries.list().then(setAllLibraries).catch(console.error);
+    if (selectedLibrary) {
+      api.books.list({ libraryId: selectedLibrary, limit: '500' })
+        .then(d => setAllInventory((d.books ?? d).flatMap((b: any) => b.inventory ?? [])))
+        .catch(console.error);
+    }
+  }, [selectedLibrary]);
 
   if (!user) {
     navigate('/login');
@@ -34,10 +45,10 @@ export default function AllResourcesPage() {
 
   const getInventory = (bookId: string) => {
     if (!selectedLibrary) return null;
-    return bookInventory.find(bi => bi.bookId === bookId && bi.libraryId === selectedLibrary);
+    return allInventory.find((bi: any) => bi.bookId === bookId && bi.libraryId === selectedLibrary);
   };
 
-  const library = libraryBranches.find(l => l.id === selectedLibrary);
+  const library = allLibraries.find(l => l.id === selectedLibrary);
 
   return (
     <DashboardLayout>

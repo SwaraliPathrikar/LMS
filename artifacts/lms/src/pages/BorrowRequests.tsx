@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { books, borrowRequests, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
+import { useBooks } from '@/contexts/BooksContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,22 +44,23 @@ export default function BorrowRequests() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { books } = useBooks();
 
   const bookId = searchParams.get('bookId');
   const book = bookId ? books.find(b => b.id === bookId) : null;
 
   const [issueType, setIssueType] = useState<string>('');
   const [libraryId, setLibraryId] = useState<string>('');
+  const [libraries, setLibraries] = useState<any[]>([]);
   const [reason, setReason] = useState('');
   const [purpose, setPurpose] = useState('');
 
   const isResearch = book ? isResearchPaper(book) : false;
 
   useEffect(() => {
-    if (book?.issueTypes?.length === 1) {
-      setIssueType(book.issueTypes[0]);
-    }
-  }, [bookId]);
+    api.libraries.list().then(setLibraries).catch(console.error);
+    if (book?.issueTypes?.length === 1) setIssueType(book.issueTypes[0]);
+  }, [book]);
 
   if (!book) {
     return (
@@ -74,30 +76,21 @@ export default function BorrowRequests() {
     );
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!issueType)     { toast.error('Please select an issue type'); return; }
     if (!libraryId)     { toast.error('Please select a library'); return; }
     if (isResearch && !reason.trim())  { toast.error('Please provide a reason'); return; }
     if (isResearch && !purpose.trim()) { toast.error('Please provide a purpose'); return; }
 
-    borrowRequests.push({
-      id: `br${Date.now()}`,
-      bookId: book.id,
-      userId: user!.id,
-      userName: user!.name,
-      libraryId,
-      issueType: issueType as IssueType,
-      status: 'pending',
-      reason: reason || 'General borrowing',
-      purpose: purpose || 'Personal use',
-      email: user!.email,
-      mobile: '',
-      requestDate: new Date().toISOString().split('T')[0],
-      notificationSent: false,
-    } as any);
-
-    toast.success('Request submitted! The librarian will review it shortly.');
-    navigate('/user/requests');
+    try {
+      await api.borrow.create({
+        bookId: book!.id, libraryId,
+        issueType, reason: reason || 'General borrowing',
+        purpose: purpose || 'Personal use', mobile: '',
+      });
+      toast.success('Request submitted! The librarian will review it shortly.');
+      navigate('/user/requests');
+    } catch (e: any) { toast.error(e.message ?? 'Failed to submit request'); }
   };
 
   return (
@@ -175,7 +168,7 @@ export default function BorrowRequests() {
                   <SelectValue placeholder="Select a library..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {libraryBranches.map(lib => (
+                  {libraries.map(lib => (
                     <SelectItem key={lib.id} value={lib.id}>{lib.name}</SelectItem>
                   ))}
                 </SelectContent>

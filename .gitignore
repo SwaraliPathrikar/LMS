@@ -1,49 +1,32 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# Dependencies
+node_modules/
+.pnpm-store/
 
-# compiled output
-dist
-tmp
-out-tsc
-*.tsbuildinfo
-.expo
-.expo-shared
+# Build outputs
+artifacts/lms/dist/
+server/dist/
 
-# dependencies
-node_modules
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.*.local
+artifacts/lms/.env.local
+server/.env
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
+# SSL certs
+server/certs/
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# Logs
+*.log
+npm-debug.log*
 
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
+# OS
 .DS_Store
 Thumbs.db
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+# Uploads (user-generated content)
+server/uploads/
 
-# Replit
-.cache/
-.local/
+# IDE
+.vscode/settings.json
+.idea/

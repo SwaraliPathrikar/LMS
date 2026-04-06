@@ -1,12 +1,16 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '@/types/library';
-import { users } from '@/data/mockData';
+import * as api from '@/lib/api';
+import {
+  recordFailedAttempt, isLockedOut, clearAttempts,
+  sanitizeInput, isValidEmail,
+} from '@/lib/security';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, role: UserRole) => boolean;
-  logout: () => void;
+  login: (email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string; waitSeconds?: number }>;
+  logout: () => Promise<void>;
   selectedDepartment: string | null;
   setSelectedDepartment: (id: string | null) => void;
   selectedLibrary: string | null;
@@ -15,83 +19,93 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function deserializeUser(raw: string): User | null {
+  try {
+    const p = JSON.parse(raw);
+    if (typeof p.id === 'string' && typeof p.email === 'string' && ['admin','librarian','citizen'].includes(p.role)) return p as User;
+    return null;
+  } catch { return null; }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Initialize state from localStorage
   const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(() => {
-    return localStorage.getItem('selectedDepartment');
-  });
-  
-  const [selectedLibrary, setSelectedLibrary] = useState<string | null>(() => {
-    return localStorage.getItem('selectedLibrary');
+    const raw = localStorage.getItem('lms_user');
+    return raw ? deserializeUser(raw) : null;
   });
 
-  const login = (email: string, password: string, role: UserRole): boolean => {
-    // Find user by email, password, and role
-    const foundUser = users.find(
-      u => u.email === email && u.password === password && u.role === role
-    );
+  const [selectedDepartment, setSelectedDepartmentState] = useState<string | null>(() => localStorage.getItem('lms_dept'));
+  const [selectedLibrary, setSelectedLibraryState] = useState<string | null>(() => localStorage.getItem('lms_lib'));
 
-    if (foundUser) {
-      // Set user without password
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword as User);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+  // Restore user from /me on mount (validates token is still good)
+  useEffect(() => {
+    if (api.getAccessToken()) {
+      api.auth.me().then(u => {
+        setUser(u);
+        localStorage.setItem('lms_user', JSON.stringify(u));
+        if (u.role === 'librarian' && u.libraryId) {
+          setSelectedLibraryState(u.libraryId);
+          localStorage.setItem('lms_lib', u.libraryId);
+        }
+      }).catch(() => {
+        // Token invalid — clear everything
+        api.clearTokens();
+        localStorage.removeItem('lms_user');
+        setUser(null);
+      });
+    }
+  }, []);
 
-      // For librarians, auto-select their assigned library
-      if (foundUser.role === 'librarian' && foundUser.libraryId) {
-        setSelectedLibrary(foundUser.libraryId);
-        localStorage.setItem('selectedLibrary', foundUser.libraryId);
+  const login = async (rawEmail: string, rawPassword: string, role: UserRole) => {
+    const email = sanitizeInput(rawEmail).toLowerCase();
+    const password = sanitizeInput(rawPassword);
+
+    if (!email || !password) return { success: false, error: 'Please enter your email and password.' };
+    if (!isValidEmail(email)) return { success: false, error: 'Please enter a valid email address.' };
+
+    const lockStatus = isLockedOut(email);
+    if (lockStatus.locked) return { success: false, error: `Too many failed attempts. Try again in ${lockStatus.waitSeconds}s.`, waitSeconds: lockStatus.waitSeconds };
+
+    try {
+      const data = await api.auth.login(email, password, role);
+      clearAttempts(email);
+      api.setTokens(data.accessToken, data.refreshToken);
+      setUser(data.user);
+      localStorage.setItem('lms_user', JSON.stringify(data.user));
+      if (data.user.role === 'librarian' && data.user.libraryId) {
+        setSelectedLibraryState(data.user.libraryId);
+        localStorage.setItem('lms_lib', data.user.libraryId);
       }
-
-      return true;
+      return { success: true };
+    } catch (err: any) {
+      const result = recordFailedAttempt(email);
+      if (result.locked) return { success: false, error: `Too many failed attempts. Try again in ${result.waitSeconds}s.`, waitSeconds: result.waitSeconds };
+      return { success: false, error: err.message ?? 'Invalid credentials. Please try again.' };
     }
-
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try { await api.auth.logout(); } catch {}
+    api.clearTokens();
     setUser(null);
-    setSelectedDepartment(null);
-    setSelectedLibrary(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('selectedDepartment');
-    localStorage.removeItem('selectedLibrary');
+    setSelectedDepartmentState(null);
+    setSelectedLibraryState(null);
+    localStorage.removeItem('lms_user');
+    localStorage.removeItem('lms_dept');
+    localStorage.removeItem('lms_lib');
   };
 
-  const handleSetSelectedDepartment = (id: string | null) => {
-    setSelectedDepartment(id);
-    if (id) {
-      localStorage.setItem('selectedDepartment', id);
-    } else {
-      localStorage.removeItem('selectedDepartment');
-    }
+  const setSelectedDepartment = (id: string | null) => {
+    setSelectedDepartmentState(id);
+    if (id) localStorage.setItem('lms_dept', id); else localStorage.removeItem('lms_dept');
   };
 
-  const handleSetSelectedLibrary = (id: string | null) => {
-    setSelectedLibrary(id);
-    if (id) {
-      localStorage.setItem('selectedLibrary', id);
-    } else {
-      localStorage.removeItem('selectedLibrary');
-    }
+  const setSelectedLibrary = (id: string | null) => {
+    setSelectedLibraryState(id);
+    if (id) localStorage.setItem('lms_lib', id); else localStorage.removeItem('lms_lib');
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isAuthenticated: !!user,
-      login,
-      logout,
-      selectedDepartment,
-      setSelectedDepartment: handleSetSelectedDepartment,
-      selectedLibrary,
-      setSelectedLibrary: handleSetSelectedLibrary,
-    }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, selectedDepartment, setSelectedDepartment, selectedLibrary, setSelectedLibrary }}>
       {children}
     </AuthContext.Provider>
   );

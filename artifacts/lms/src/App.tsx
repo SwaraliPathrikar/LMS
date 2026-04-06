@@ -40,11 +40,21 @@ import ResourceManagement from "./pages/ResourceManagement";
 import SignUpPage from "./pages/SignUpPage";
 import LibraryLocationManagement from "./pages/LibraryLocationManagement";
 
+import LibraryCardPage from "./pages/LibraryCardPage";
+
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+}
+
+/** Route only accessible to specific roles. Redirects to /dashboard if role not allowed. */
+function RoleRoute({ children, roles }: { children: React.ReactNode; roles: string[] }) {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (!user || !roles.includes(user.role)) return <Navigate to="/dashboard" />;
+  return <>{children}</>;
 }
 
 function AppRoutes() {
@@ -53,39 +63,40 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
-      <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" /> : <SignUpPage />} />
+      <Route path="/signup" element={<SignUpPage />} />
       <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/resources/management" element={<ProtectedRoute><ResourceManagement /></ProtectedRoute>} />
-      <Route path="/responsive-preview" element={<ProtectedRoute><ResponsivePreview /></ProtectedRoute>} />
+      <Route path="/resources/management" element={<RoleRoute roles={['admin','librarian']}><ResourceManagement /></RoleRoute>} />
+      <Route path="/responsive-preview" element={<RoleRoute roles={['admin']}><ResponsivePreview /></RoleRoute>} />
       <Route path="/departments" element={<ProtectedRoute><DepartmentSelect /></ProtectedRoute>} />
-      <Route path="/libraries" element={<ProtectedRoute><LibraryBranches /></ProtectedRoute>} />
+      <Route path="/libraries" element={<RoleRoute roles={['admin','librarian']}><LibraryBranches /></RoleRoute>} />
       <Route path="/books/search" element={<ProtectedRoute><BookSearch /></ProtectedRoute>} />
-      <Route path="/resources/add" element={<ProtectedRoute><AddResource /></ProtectedRoute>} />
+      <Route path="/resources/add" element={<RoleRoute roles={['admin','librarian']}><AddResource /></RoleRoute>} />
       <Route path="/resources" element={<ProtectedRoute><AllResourcesPage /></ProtectedRoute>} />
       <Route path="/resources/digital" element={<ProtectedRoute><DigitalResources /></ProtectedRoute>} />
-      <Route path="/borrow-requests" element={<ProtectedRoute><BorrowRequests /></ProtectedRoute>} />
-      <Route path="/readers/check-in" element={<ProtectedRoute><LibraryReadersPage /></ProtectedRoute>} />
-      <Route path="/readers/checked-in" element={<ProtectedRoute><ReadersPage /></ProtectedRoute>} />
-      <Route path="/readers/history" element={<ProtectedRoute><ReadersHistoryPage /></ProtectedRoute>} />
-      <Route path="/members/add" element={<ProtectedRoute><AddMemberPage /></ProtectedRoute>} />
-      <Route path="/members" element={<ProtectedRoute><MembersPage /></ProtectedRoute>} />
-      <Route path="/admin/requests-approve" element={<ProtectedRoute><AdminRequestsPage /></ProtectedRoute>} />
-      <Route path="/admin/libraries" element={<ProtectedRoute><LibraryLocationManagement /></ProtectedRoute>} />
-      <Route path="/admin/requests-borrow" element={<ProtectedRoute><AdminRequestsPage /></ProtectedRoute>} />
-      <Route path="/admin/borrowed" element={<ProtectedRoute><BorrowedResourcesPage /></ProtectedRoute>} />
-      <Route path="/admin/renewals" element={<ProtectedRoute><RenewalRequestsPage /></ProtectedRoute>} />
-      <Route path="/admin/history" element={<ProtectedRoute><AdminHistoryPage /></ProtectedRoute>} />
-      <Route path="/circulation" element={<ProtectedRoute><CirculationManagement /></ProtectedRoute>} />
-      <Route path="/circulation/books" element={<ProtectedRoute><BookCirculationPage /></ProtectedRoute>} />
+      <Route path="/borrow-requests" element={<RoleRoute roles={['citizen']}><BorrowRequests /></RoleRoute>} />
+      <Route path="/readers/check-in" element={<RoleRoute roles={['admin','librarian']}><LibraryReadersPage /></RoleRoute>} />
+      <Route path="/readers/checked-in" element={<RoleRoute roles={['admin','librarian']}><ReadersPage /></RoleRoute>} />
+      <Route path="/readers/history" element={<RoleRoute roles={['admin','librarian']}><ReadersHistoryPage /></RoleRoute>} />
+      <Route path="/members/add" element={<RoleRoute roles={['admin','librarian']}><AddMemberPage /></RoleRoute>} />
+      <Route path="/members" element={<RoleRoute roles={['admin','librarian']}><MembersPage /></RoleRoute>} />
+      <Route path="/admin/requests-approve" element={<RoleRoute roles={['admin','librarian']}><AdminRequestsPage /></RoleRoute>} />
+      <Route path="/admin/libraries" element={<RoleRoute roles={['admin']}><LibraryLocationManagement /></RoleRoute>} />
+      <Route path="/admin/requests-borrow" element={<RoleRoute roles={['admin','librarian']}><AdminRequestsPage /></RoleRoute>} />
+      <Route path="/admin/borrowed" element={<RoleRoute roles={['admin','librarian']}><BorrowedResourcesPage /></RoleRoute>} />
+      <Route path="/admin/renewals" element={<RoleRoute roles={['admin','librarian']}><RenewalRequestsPage /></RoleRoute>} />
+      <Route path="/admin/history" element={<RoleRoute roles={['admin','librarian']}><AdminHistoryPage /></RoleRoute>} />
+      <Route path="/circulation" element={<RoleRoute roles={['admin','librarian']}><CirculationManagement /></RoleRoute>} />
+      <Route path="/circulation/books" element={<RoleRoute roles={['admin','librarian']}><BookCirculationPage /></RoleRoute>} />
       <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-      <Route path="/user/requests" element={<ProtectedRoute><CitizenMyRequestsPage /></ProtectedRoute>} />
-      <Route path="/user/borrowed" element={<ProtectedRoute><BorrowedResourcesPage /></ProtectedRoute>} />
-      <Route path="/user/history" element={<ProtectedRoute><CitizenHistoryPage /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute><ReportsAnalyticsPage /></ProtectedRoute>} />
-      <Route path="/reports-analytics" element={<ProtectedRoute><ReportsAnalyticsPage /></ProtectedRoute>} />
+      <Route path="/user/requests" element={<RoleRoute roles={['citizen']}><CitizenMyRequestsPage /></RoleRoute>} />
+      <Route path="/user/borrowed" element={<RoleRoute roles={['citizen']}><BorrowedResourcesPage /></RoleRoute>} />
+      <Route path="/user/history" element={<RoleRoute roles={['citizen']}><CitizenHistoryPage /></RoleRoute>} />
+      <Route path="/settings" element={<RoleRoute roles={['admin','librarian']}><SettingsPage /></RoleRoute>} />
+      <Route path="/reports" element={<RoleRoute roles={['admin','librarian']}><ReportsAnalyticsPage /></RoleRoute>} />
+      <Route path="/reports-analytics" element={<RoleRoute roles={['admin','librarian']}><ReportsAnalyticsPage /></RoleRoute>} />
       <Route path="/fees" element={<ProtectedRoute><FeesPage /></ProtectedRoute>} />
+      <Route path="/my-card" element={<RoleRoute roles={['citizen']}><LibraryCardPage /></RoleRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>

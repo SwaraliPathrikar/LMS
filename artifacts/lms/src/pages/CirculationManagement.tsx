@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { circulationTransactions, books, members, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, CheckCircle, Clock, AlertCircle, RotateCcw } from 'lucide-react';
+import { fmtDate } from '@/lib/formatDate';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const statusColors: Record<string, string> = {
@@ -31,43 +32,41 @@ export default function CirculationManagement() {
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
+  const [allLibraries, setAllLibraries] = useState<any[]>([]);
+
+  useEffect(() => { api.libraries.list().then(setAllLibraries).catch(console.error); }, []);
+
+  useEffect(() => {
+    const params: Record<string, string> = { limit: '200' };
+    if (selectedLibrary) params.libraryId = selectedLibrary;
+    api.borrow.list(params).then(d => setAllTransactions(d.requests ?? d)).catch(console.error);
+  }, [selectedLibrary]);
 
   const filtered = useMemo(() => {
-    let result = circulationTransactions;
-    
-    // Filter by library if admin
-    if (user?.role === 'admin' && selectedLibrary) {
-      result = result.filter(t => t.libraryId === selectedLibrary);
-    } else if (user?.role === 'librarian' && selectedLibrary) {
-      result = result.filter(t => t.libraryId === selectedLibrary);
-    }
-    
+    let result = allTransactions;
     if (query.trim()) {
       const q = query.toLowerCase();
-      result = result.filter(t => {
-        const m = members.find(m => m.id === t.memberId);
-        const b = books.find(b => b.id === t.bookId);
-        return m?.name.toLowerCase().includes(q) || b?.title.toLowerCase().includes(q) || t.id.toLowerCase().includes(q);
-      });
+      result = result.filter(t =>
+        (t.user?.name ?? '').toLowerCase().includes(q) ||
+        (t.book?.title ?? '').toLowerCase().includes(q) ||
+        t.id.toLowerCase().includes(q)
+      );
     }
-    if (selectedStatus) {
-      result = result.filter(t => t.status === selectedStatus);
-    }
+    if (selectedStatus) result = result.filter(t => t.status === selectedStatus);
     return result;
-  }, [query, selectedStatus, selectedLibrary, user?.role]);
+  }, [query, selectedStatus, allTransactions]);
 
-  const stats = useMemo(() => {
-    return {
-      issued: circulationTransactions.filter(t => t.status === 'issued').length,
-      returned: circulationTransactions.filter(t => t.status === 'returned').length,
-      overdue: circulationTransactions.filter(t => t.status === 'overdue').length,
-      lost: circulationTransactions.filter(t => t.status === 'lost').length,
-    };
-  }, []);
+  const stats = useMemo(() => ({
+    issued: allTransactions.filter(t => t.status === 'approved').length,
+    returned: allTransactions.filter(t => t.status === 'returned').length,
+    overdue: allTransactions.filter(t => t.status === 'overdue').length,
+    lost: 0,
+  }), [allTransactions]);
 
-  const getBookTitle = (bookId: string) => books.find(b => b.id === bookId)?.title || 'Unknown';
-  const getMemberName = (memberId: string) => members.find(m => m.id === memberId)?.name || 'Unknown';
-  const getLibraryName = (libraryId: string) => libraryBranches.find(l => l.id === libraryId)?.name || 'Unknown';
+  const getBookTitle = (req: any) => req.book?.title || 'Unknown';
+  const getMemberName = (req: any) => req.user?.name || 'Unknown';
+  const getLibraryName = (req: any) => req.library?.name || 'Unknown';
 
   return (
     <DashboardLayout>
@@ -87,7 +86,7 @@ export default function CirculationManagement() {
                 <SelectValue placeholder="Select a library..." />
               </SelectTrigger>
               <SelectContent>
-                {libraryBranches.map(lib => (
+                {allLibraries.map(lib => (
                   <SelectItem key={lib.id} value={lib.id}>
                     {lib.name}
                   </SelectItem>
@@ -191,10 +190,10 @@ export default function CirculationManagement() {
                     return (
                       <tr key={transaction.id} className="border-b hover:bg-secondary/50 transition-colors">
                         <td className="py-3 px-4 font-mono text-xs">{transaction.id}</td>
-                        <td className="py-3 px-4">{getMemberName(transaction.memberId)}</td>
-                        <td className="py-3 px-4 max-w-xs truncate">{getBookTitle(transaction.bookId)}</td>
-                        <td className="py-3 px-4">{transaction.issueDate}</td>
-                        <td className="py-3 px-4">{transaction.dueDate}</td>
+                        <td className="py-3 px-4">{getMemberName(transaction)}</td>
+                        <td className="py-3 px-4 max-w-xs truncate">{getBookTitle(transaction)}</td>
+                        <td className="py-3 px-4">{fmtDate(transaction.requestDate)}</td>
+                        <td className="py-3 px-4">{transaction.dueDate ? fmtDate(transaction.dueDate) : '—'}</td>
                         <td className="py-3 px-4">
                           <Badge className={statusColors[transaction.status]}>
                             <Icon size={12} className="mr-1" />
@@ -224,15 +223,12 @@ export default function CirculationManagement() {
             {selectedTransaction && (
               <div className="space-y-3">
                 <div className="bg-secondary/50 rounded-lg p-3 space-y-2">
-                  <p className="text-xs"><strong>ID:</strong> {selectedTransaction.id}</p>
-                  <p className="text-xs"><strong>Member:</strong> {getMemberName(selectedTransaction.memberId)}</p>
-                  <p className="text-xs"><strong>Book:</strong> {getBookTitle(selectedTransaction.bookId)}</p>
-                  <p className="text-xs"><strong>Library:</strong> {getLibraryName(selectedTransaction.libraryId)}</p>
-                  <p className="text-xs"><strong>Issue:</strong> {selectedTransaction.issueDate}</p>
-                  <p className="text-xs"><strong>Due:</strong> {selectedTransaction.dueDate}</p>
-                  {selectedTransaction.returnDate && <p className="text-xs"><strong>Return:</strong> {selectedTransaction.returnDate}</p>}
-                  <p className="text-xs"><strong>Renewals:</strong> {selectedTransaction.renewalCount}</p>
-                  <p className="text-xs"><strong>Fine:</strong> ₹{selectedTransaction.fineAmount}</p>
+                  <p className="text-xs"><strong>Member:</strong> {getMemberName(selectedTransaction)}</p>
+                  <p className="text-xs"><strong>Book:</strong> {getBookTitle(selectedTransaction)}</p>
+                  <p className="text-xs"><strong>Library:</strong> {getLibraryName(selectedTransaction)}</p>
+                  <p className="text-xs"><strong>Request Date:</strong> {fmtDate(selectedTransaction.requestDate)}</p>
+                  <p className="text-xs"><strong>Due:</strong> {selectedTransaction.dueDate ? fmtDate(selectedTransaction.dueDate) : '—'}</p>
+                  {selectedTransaction.returnDate && <p className="text-xs"><strong>Return:</strong> {fmtDate(selectedTransaction.returnDate)}</p>}
                   <p className="text-xs">
                     <strong>Status:</strong>{' '}
                     <Badge className={statusColors[selectedTransaction.status]}>{selectedTransaction.status}</Badge>

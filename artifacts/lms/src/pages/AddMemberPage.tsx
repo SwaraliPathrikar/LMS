@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { members, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { toast } from '@/components/ui/use-toast';
 
 export default function AddMemberPage() {
   const { user, selectedLibrary } = useAuth();
+  const [libraries, setLibraries] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,6 +22,12 @@ export default function AddMemberPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+
+  useEffect(() => {
+    api.libraries.list().then(setLibraries).catch(console.error);
+  }, []);
 
   if (!user || user.role === 'citizen') {
     return (
@@ -41,59 +48,48 @@ export default function AddMemberPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email format';
     if (!formData.mobile.trim()) newErrors.mobile = 'Mobile number is required';
     else {
-      // Accept various mobile formats: 10 digits, with +91, with spaces, etc.
       const mobileDigits = formData.mobile.replace(/\D/g, '');
       if (mobileDigits.length < 10) newErrors.mobile = 'Mobile number must have at least 10 digits';
     }
     if (!formData.libraryId) newErrors.libraryId = 'Library is required';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
-    // Generate new member ID
-    const newMemberId = `m${Math.floor(Math.random() * 10000)}`;
-    const membershipId = `MEM-${new Date().getFullYear()}-${String(members.length + 1).padStart(3, '0')}`;
-    const today = new Date().toISOString().split('T')[0];
-    const expiryDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
-
-    const newMember = {
-      id: newMemberId,
-      name: formData.name,
-      email: formData.email,
-      mobile: formData.mobile,
-      membershipId,
-      membershipType: formData.membershipType,
-      joinDate: today,
-      expiryDate,
-      status: 'active' as const,
-      borrowedBooks: 0,
-      finesDue: 0,
-      libraryId: formData.libraryId,
-    };
-
-    members.push(newMember);
-    setSubmitted(true);
-    toast({ title: 'Success', description: `Member ${formData.name} added successfully!` });
-
-    setTimeout(() => {
-      setFormData({ name: '', email: '', mobile: '', membershipType: 'standard', libraryId: selectedLibrary || '' });
-      setSubmitted(false);
-    }, 2000);
+    try {
+      setSubmitting(true);
+      await api.users.create({
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile,
+        role: 'citizen',
+        libraryId: formData.libraryId,
+        password: 'Welcome@123', // default password
+      });
+      setNewMemberName(formData.name);
+      setSubmitted(true);
+      toast({ title: 'Success', description: `Member ${formData.name} added successfully!` });
+      setTimeout(() => {
+        setFormData({ name: '', email: '', mobile: '', membershipType: 'standard', libraryId: selectedLibrary || '' });
+        setSubmitted(false);
+      }, 2000);
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message ?? 'Failed to add member', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const selectedBranch = libraryBranches.find(b => b.id === formData.libraryId);
+  const selectedBranch = libraries.find(b => b.id === formData.libraryId);
 
   return (
     <DashboardLayout>
@@ -112,7 +108,6 @@ export default function AddMemberPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name *</Label>
                 <Input
@@ -125,7 +120,6 @@ export default function AddMemberPage() {
                 {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
 
-              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address *</Label>
                 <Input
@@ -139,7 +133,6 @@ export default function AddMemberPage() {
                 {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
 
-              {/* Mobile */}
               <div className="space-y-2">
                 <Label htmlFor="mobile">Mobile Number *</Label>
                 <Input
@@ -152,10 +145,9 @@ export default function AddMemberPage() {
                 {errors.mobile && <p className="text-xs text-destructive">{errors.mobile}</p>}
               </div>
 
-              {/* Membership Type */}
               <div className="space-y-2">
                 <Label htmlFor="type">Membership Type *</Label>
-                <Select value={formData.membershipType} onValueChange={value => setFormData({ ...formData, membershipType: value as 'standard' | 'premium' | 'student' | 'senior' })}>
+                <Select value={formData.membershipType} onValueChange={value => setFormData({ ...formData, membershipType: value as any })}>
                   <SelectTrigger id="type">
                     <SelectValue />
                   </SelectTrigger>
@@ -168,7 +160,6 @@ export default function AddMemberPage() {
                 </Select>
               </div>
 
-              {/* Library Selection */}
               <div className="space-y-2">
                 <Label htmlFor="library">Library *</Label>
                 <Select value={formData.libraryId} onValueChange={value => setFormData({ ...formData, libraryId: value })}>
@@ -176,7 +167,7 @@ export default function AddMemberPage() {
                     <SelectValue placeholder="Select a library" />
                   </SelectTrigger>
                   <SelectContent>
-                    {libraryBranches.map(lib => (
+                    {libraries.map(lib => (
                       <SelectItem key={lib.id} value={lib.id}>{lib.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -185,7 +176,6 @@ export default function AddMemberPage() {
                 {!formData.libraryId && <p className="text-xs text-muted-foreground">Please select a library to continue</p>}
               </div>
 
-              {/* Summary */}
               {selectedBranch && (
                 <Card className="bg-muted/50 border-0">
                   <CardContent className="p-4 space-y-2 text-sm">
@@ -196,9 +186,10 @@ export default function AddMemberPage() {
                 </Card>
               )}
 
-              {/* Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button type="submit" className="flex-1">Add Member</Button>
+                <Button type="submit" className="flex-1" disabled={submitting}>
+                  {submitting ? 'Adding...' : 'Add Member'}
+                </Button>
                 <Button type="button" variant="outline" onClick={() => setFormData({ name: '', email: '', mobile: '', membershipType: 'standard', libraryId: selectedLibrary || '' })}>
                   Clear
                 </Button>
@@ -213,7 +204,7 @@ export default function AddMemberPage() {
               <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
               <div>
                 <p className="font-medium text-success">Member added successfully!</p>
-                <p className="text-sm text-success/80">Membership ID: {members[members.length - 1]?.membershipId}</p>
+                <p className="text-sm text-success/80">{newMemberName} has been registered.</p>
               </div>
             </CardContent>
           </Card>

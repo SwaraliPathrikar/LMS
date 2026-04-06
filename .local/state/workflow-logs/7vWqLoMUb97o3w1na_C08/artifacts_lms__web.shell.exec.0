@@ -1,0 +1,82 @@
+
+> @workspace/lms@0.0.0 dev /home/runner/workspace/artifacts/lms
+> vite --config vite.config.ts --host 0.0.0.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m356[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m22419[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.31.92.2:[1m22419[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[RUNTIME_ERROR]{"type":"runtime-error","timestamp":1773824330599,"name":"Error","message":"scannerRef.current.stop is not a function","stack":"    at stopScanner /home/runner/workspace/artifacts/lms/src/pages/BookCirculationPage.tsx:41:26\n\n\n\n\n\n\n\n","loc":{"line":41,"column":26,"file":"/home/runner/workspace/artifacts/lms/src/pages/BookCirculationPage.tsx"},"frame":"39 |    const stopScanner = () => {\n40 |      if (scannerRef.current) {\n41 |        scannerRef.current.stop().catch(() => {});\n   |                           ^\n42 |        scannerRef.current.clear().catch(() => {});\n43 |        scannerRef.current = null;"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:59:20 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/BookCirculationPage.tsx, /src/index.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:59:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/BookCirculationPage.tsx, /src/index.css[22m [33m(x2)[39m

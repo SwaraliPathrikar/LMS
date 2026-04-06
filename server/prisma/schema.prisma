@@ -1,0 +1,483 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  librarian
+  citizen
+}
+
+enum MemberStatus {
+  active
+  expired
+  suspended
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+}
+
+enum ResourceType {
+  pdf
+  audiobook
+  video
+  research_paper
+  article
+  e_document
+}
+
+enum AccessType {
+  open
+  restricted
+  paid
+}
+
+enum IssueType {
+  physical
+  pdf
+  movie
+  mp4
+  accessibility
+  audiobook
+  e_document
+  content_file
+  article
+  news_item
+  loose_issue
+  internet_resource
+}
+
+enum BookCategory {
+  physical
+  digital
+  free
+  payable
+}
+
+enum BorrowStatus {
+  pending
+  approved
+  rejected
+  returned
+  overdue
+}
+
+enum FineStatus {
+  pending
+  paid
+  waived
+}
+
+enum EventCategory {
+  reading
+  book_fair
+  storytelling
+  author_talk
+  workshop
+}
+
+enum EventStatus {
+  upcoming
+  ongoing
+  completed
+  cancelled
+}
+
+enum NotificationType {
+  due_reminder
+  approval
+  event
+  membership_expiry
+  fine_alert
+  borrow_request
+  overdue_alert
+  renewal_request
+  new_member
+  low_inventory
+  fine_collected
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
+// ── Models ────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          Role     @default(citizen)
+  avatarUrl     String?
+  mobile        String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  libraryId         String?
+  library           Library?          @relation("LibrarianLibrary", fields: [libraryId], references: [id])
+  libraryCard       LibraryCard?
+  borrowRequests    BorrowRequest[]
+  fines             Fine[]
+  checkIns          CheckInRecord[]
+  notifications     Notification[]
+  eventRegistrations EventRegistration[]
+  downloadLogs      DownloadLog[]
+  refreshTokens     RefreshToken[]
+  payments          Payment[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Department {
+  id          String    @id @default(uuid())
+  name        String
+  cluster     String
+  description String
+  icon        String
+  createdAt   DateTime  @default(now())
+  libraries   Library[]
+}
+
+model Library {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  phone       String
+  mapLink     String?
+  librarian   String?  // display name e.g. "Lib: Dr. Meera Kulkarni"
+  departmentId String
+  department  Department @relation(fields: [departmentId], references: [id])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  librarians        User[]            @relation("LibrarianLibrary")
+  settings          LibrarySettings?
+  bookInventory     BookInventory[]
+  borrowRequests    BorrowRequest[]
+  checkIns          CheckInRecord[]
+  events            Event[]
+  libraryCards      LibraryCard[]     @relation("LibraryCardLibraries")
+  membershipPlans   MembershipPlanLibrary[]
+
+  @@index([departmentId])
+}
+
+model LibrarySettings {
+  id             String   @id @default(uuid())
+  libraryId      String   @unique
+  library        Library  @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  operatingHours String   @default("9:00 AM - 6:00 PM")
+  closedDays     String[] @default([])
+  maxCapacity    Int      @default(200)
+  standardFineRate Float  @default(5)
+  premiumFineRate  Float  @default(10)
+  membershipFee    Float  @default(500)
+  updatedAt      DateTime @updatedAt
+}
+
+model SystemSettings {
+  id                  String   @id @default("system")
+  standardFineRate    Float    @default(5)
+  premiumFineRate     Float    @default(10)
+  maxBorrowPeriodDays Int      @default(30)
+  maxRenewals         Int      @default(2)
+  membershipFee       Float    @default(500)
+  maxBooksPerMember   Int      @default(5)
+  updatedAt           DateTime @updatedAt
+}
+
+model MembershipPlan {
+  id           String   @id @default(uuid())
+  name         String
+  description  String
+  monthlyPrice Float
+  yearlyPrice  Float
+  maxBooks     Int
+  color        String   @default("gray")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  libraries    MembershipPlanLibrary[]
+  libraryCards LibraryCard[]
+  payments     Payment[]
+}
+
+model MembershipPlanLibrary {
+  planId    String
+  libraryId String
+  plan      MembershipPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  library   Library        @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+
+  @@id([planId, libraryId])
+}
+
+model LibraryCard {
+  id           String       @id @default(uuid())
+  cardNumber   String       @unique  // e.g. LMS-2026-000001
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId       String
+  plan         MembershipPlan @relation(fields: [planId], references: [id])
+  billingCycle BillingCycle
+  amountPaid   Float
+  photoUrl     String?
+  address      String
+  dateOfBirth  String
+  issueDate    DateTime     @default(now())
+  expiryDate   DateTime
+  status       MemberStatus @default(active)
+  qrPayload    String       // JSON string encoded in QR
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  libraries    Library[]    @relation("LibraryCardLibraries")
+  payments     Payment[]
+}
+
+model Book {
+  id               String        @id @default(uuid())
+  title            String
+  author           String
+  isbn             String        @unique
+  genre            String
+  keywords         String[]
+  coverImageUrl    String?
+  description      String?
+  publisher        String?
+  language         String        @default("English")
+  publishedYear    Int
+  pages            Int?
+  issueTypes       IssueType[]
+  accessType       AccessType    @default(open)
+  categories       BookCategory[]
+  cost             Float?
+  borrowPeriodDays Int?
+  downloadCount    Int           @default(0)
+  isActive         Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Digital file
+  fileUrl          String?       // PDF / audio / video URL
+
+  inventory        BookInventory[]
+  borrowRequests   BorrowRequest[]
+  fines            Fine[]
+
+  @@index([genre])
+  @@index([title])
+}
+
+model BookInventory {
+  id              String  @id @default(uuid())
+  bookId          String
+  book            Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  libraryId       String
+  library         Library @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  totalCount      Int     @default(0)
+  availableCount  Int     @default(0)
+  updatedAt       DateTime @updatedAt
+
+  @@unique([bookId, libraryId])
+  @@index([libraryId])
+}
+
+model BorrowRequest {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  bookId         String
+  book           Book         @relation(fields: [bookId], references: [id])
+  libraryId      String
+  library        Library      @relation(fields: [libraryId], references: [id])
+  issueType      IssueType
+  status         BorrowStatus @default(pending)
+  reason         String
+  purpose        String
+  mobile         String
+  requestDate    DateTime     @default(now())
+  responseDate   DateTime?
+  rejectionReason String?
+  dueDate        DateTime?
+  returnDate     DateTime?
+  renewalCount   Int          @default(0)
+  fineAmount     Float        @default(0)
+
+  fines          Fine[]
+
+  @@index([userId])
+  @@index([libraryId])
+  @@index([status])
+}
+
+model Fine {
+  id            String     @id @default(uuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+  bookId        String
+  book          Book       @relation(fields: [bookId], references: [id])
+  borrowId      String?
+  borrow        BorrowRequest? @relation(fields: [borrowId], references: [id])
+  amount        Float
+  reason        String
+  status        FineStatus @default(pending)
+  dueDate       DateTime
+  paidDate      DateTime?
+  returnDate    DateTime?
+  daysOverdue   Int?
+  dailyFineRate Float?
+  createdAt     DateTime   @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+model CheckInRecord {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  libraryId    String
+  library      Library   @relation(fields: [libraryId], references: [id])
+  checkInTime  DateTime  @default(now())
+  checkOutTime DateTime?
+
+  @@index([libraryId])
+  @@index([userId])
+}
+
+model DigitalResource {
+  id            String       @id @default(uuid())
+  title         String
+  author        String
+  authors       String[]
+  type          ResourceType
+  description   String
+  accessType    AccessType   @default(open)
+  cost          Float?
+  fileUrl       String?
+  fileSize      Float        @default(0)
+  downloadCount Int          @default(0)
+  publishedYear Int?
+  keywords      String[]
+  language      String       @default("English")
+  researchDomain String?
+  researchField  String?
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  downloadLogs  DownloadLog[]
+}
+
+model DownloadLog {
+  id           String          @id @default(uuid())
+  resourceId   String
+  resource     DigitalResource @relation(fields: [resourceId], references: [id])
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  downloadDate DateTime        @default(now())
+
+  @@index([resourceId])
+  @@index([userId])
+}
+
+model Event {
+  id              String        @id @default(uuid())
+  title           String
+  description     String
+  category        EventCategory
+  startDate       DateTime
+  endDate         DateTime
+  location        String
+  libraryId       String
+  library         Library       @relation(fields: [libraryId], references: [id])
+  capacity        Int
+  registeredCount Int           @default(0)
+  status          EventStatus   @default(upcoming)
+  imageUrl        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  registrations   EventRegistration[]
+
+  @@index([libraryId])
+  @@index([status])
+}
+
+model EventRegistration {
+  id               String   @id @default(uuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  registrationDate DateTime @default(now())
+  attended         Boolean  @default(false)
+
+  @@unique([eventId, userId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  actionUrl String?
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  planId          String?
+  plan            MembershipPlan? @relation(fields: [planId], references: [id])
+  libraryCardId   String?
+  libraryCard     LibraryCard?  @relation(fields: [libraryCardId], references: [id])
+  razorpayOrderId String?       @unique
+  razorpayPaymentId String?     @unique
+  amount          Float
+  currency        String        @default("INR")
+  status          PaymentStatus @default(pending)
+  billingCycle    BillingCycle?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}

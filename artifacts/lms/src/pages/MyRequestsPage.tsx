@@ -10,6 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
 import { FileText, Send, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { fmtDate } from '@/lib/formatDate';
 
 export default function MyRequestsPage() {
   const { user } = useAuth();
@@ -132,7 +133,7 @@ function CitizenRequestHistory() {
                         <TableCell>
                           <Badge variant="outline" className="text-xs capitalize">{req.issueType}</Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{req.requestDate}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{fmtDate(req.requestDate)}</TableCell>
                         <TableCell>{statusBadge(req.status)}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {req.status === 'rejected' && req.rejectionReason

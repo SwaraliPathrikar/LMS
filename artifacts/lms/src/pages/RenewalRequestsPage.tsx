@@ -1,20 +1,23 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { circulationTransactions, books, members, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
-
 import { toast } from 'sonner';
+import { fmtDate } from '@/lib/formatDate';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function RenewalRequestsPage() {
   const { user, selectedLibrary, setSelectedLibrary } = useAuth();
   const navigate = useNavigate();
+  const [borrowRequests, setBorrowRequests] = useState<any[]>([]);
+  const [libraries, setLibraries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedRenewal, setSelectedRenewal] = useState<any>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
@@ -44,47 +47,62 @@ export default function RenewalRequestsPage() {
     );
   }
 
-  // Mock renewal requests based on circulation transactions
-  const renewalRequests = useMemo(() => {
-    let requests = circulationTransactions
-      .filter(t => t.renewalCount < 2 && (t.status === 'issued' || t.status === 'overdue'))
-      .map((t, idx) => ({
-        id: `renewal-${idx}`,
-        transactionId: t.id,
-        memberId: t.memberId,
-        bookId: t.bookId,
-        libraryId: t.libraryId,
-        currentDueDate: t.dueDate,
-        newDueDate: new Date(new Date(t.dueDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        renewalCount: t.renewalCount,
-        status: 'pending' as 'pending' | 'approved' | 'rejected',
-        requestDate: new Date().toISOString().split('T')[0],
-      }));
+  useEffect(() => {
+    api.libraries.list().then(setLibraries).catch(console.error);
+  }, []);
 
-    // Filter by selected library for both admin and librarian
-    if (selectedLibrary) {
-      requests = requests.filter(r => r.libraryId === selectedLibrary);
-    }
-
-    return requests;
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        setLoading(true);
+        const params: Record<string, string> = { status: 'approved' };
+        if (selectedLibrary) params.libraryId = selectedLibrary;
+        const data = await api.borrow.list(params);
+        setBorrowRequests(data.requests ?? data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
   }, [selectedLibrary]);
 
-  const pending = renewalRequests.filter(r => r.status === 'pending');
-  const approved = renewalRequests.filter(r => r.status === 'approved');
-  const rejected = renewalRequests.filter(r => r.status === 'rejected');
+  // Build renewal requests from approved borrow requests
+  const renewalRequests = useMemo(() => {
+    return borrowRequests.map((t, idx) => ({
+      id: `renewal-${idx}`,
+      borrowId: t.id,
+      userId: t.userId,
+      bookId: t.bookId,
+      libraryId: t.libraryId,
+      currentDueDate: t.dueDate || '',
+      newDueDate: t.dueDate
+        ? new Date(new Date(t.dueDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        : '',
+      status: 'pending' as const,
+      requestDate: new Date().toISOString().split('T')[0],
+      user: t.user,
+      book: t.book,
+    }));
+  }, [borrowRequests]);
 
-  const getBookTitle = (bookId: string) => books.find(b => b.id === bookId)?.title || 'Unknown';
-  const getMemberName = (memberId: string) => members.find(m => m.id === memberId)?.name || 'Unknown';
+  const pending = renewalRequests.filter(r => r.status === 'pending');
+  const approved: any[] = [];
+  const rejected: any[] = [];
+
+  const getBookTitle = (req: any) => req.book?.title || 'Unknown';
+  const getMemberName = (req: any) => req.user?.name || 'Unknown';
 
   const handleApprove = () => {
-    toast.success(`Renewal approved for ${getBookTitle(selectedRenewal.bookId)}`);
+    toast.success(`Renewal approved for ${getBookTitle(selectedRenewal)}`);
     setShowDialog(false);
     setSelectedRenewal(null);
     setAction(null);
   };
 
   const handleReject = () => {
-    toast.success(`Renewal request rejected`);
+    toast.success('Renewal request rejected');
     setShowDialog(false);
     setSelectedRenewal(null);
     setAction(null);
@@ -98,7 +116,6 @@ export default function RenewalRequestsPage() {
           <p className="text-muted-foreground mt-1">Manage book renewal requests from members</p>
         </div>
 
-        {/* Library Selection for Admin */}
         {isAdmin && (
           <div className="max-w-xs">
             <label className="text-sm font-medium mb-2 block">Select Library</label>
@@ -107,7 +124,7 @@ export default function RenewalRequestsPage() {
                 <SelectValue placeholder="Select a library..." />
               </SelectTrigger>
               <SelectContent>
-                {libraryBranches.map(lib => (
+                {libraries.map(lib => (
                   <SelectItem key={lib.id} value={lib.id}>
                     {lib.name}
                   </SelectItem>
@@ -128,97 +145,98 @@ export default function RenewalRequestsPage() {
           </Card>
         ) : (
           <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="stat-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-3xl font-bold text-warning mt-1">{pending.length}</p>
-                </div>
-                <Clock className="w-10 h-10 text-warning/30" />
-              </div>
-            </CardContent>
-          </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="stat-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pending</p>
+                      <p className="text-3xl font-bold text-warning mt-1">{pending.length}</p>
+                    </div>
+                    <Clock className="w-10 h-10 text-warning/30" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="stat-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Approved</p>
-                  <p className="text-3xl font-bold text-success mt-1">{approved.length}</p>
-                </div>
-                <CheckCircle className="w-10 h-10 text-success/30" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="stat-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Approved</p>
+                      <p className="text-3xl font-bold text-success mt-1">{approved.length}</p>
+                    </div>
+                    <CheckCircle className="w-10 h-10 text-success/30" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="stat-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Rejected</p>
-                  <p className="text-3xl font-bold text-destructive mt-1">{rejected.length}</p>
-                </div>
-                <XCircle className="w-10 h-10 text-destructive/30" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="stat-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Rejected</p>
+                      <p className="text-3xl font-bold text-destructive mt-1">{rejected.length}</p>
+                    </div>
+                    <XCircle className="w-10 h-10 text-destructive/30" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Renewal Requests ({pending.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {pending.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No pending renewal requests</p>
-            ) : (
-              <div className="space-y-3">
-                {pending.map(req => (
-                  <div key={req.id} className="p-4 rounded-lg border hover:bg-secondary/50 transition-colors">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="font-semibold text-sm">{getMemberName(req.memberId)}</p>
-                            <p className="text-xs text-muted-foreground">{getBookTitle(req.bookId)}</p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Renewal Requests ({pending.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <p className="text-muted-foreground text-center py-8">Loading...</p>
+                ) : pending.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No pending renewal requests</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pending.map(req => (
+                      <div key={req.id} className="p-4 rounded-lg border hover:bg-secondary/50 transition-colors">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="font-semibold text-sm">{getMemberName(req)}</p>
+                                <p className="text-xs text-muted-foreground">{getBookTitle(req)}</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                              <div>
+                                <p className="text-muted-foreground">Current Due</p>
+                                <p className="font-medium">{req.currentDueDate ? fmtDate(req.currentDueDate) : '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">New Due</p>
+                                <p className="font-medium">{req.newDueDate ? fmtDate(req.newDueDate) : '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Extension</p>
+                                <p className="font-medium">14 days</p>
+                              </div>
+                            </div>
                           </div>
-                          <Badge variant="outline">{req.renewalCount}/2</Badge>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                          <div>
-                            <p className="text-muted-foreground">Current Due</p>
-                            <p className="font-medium">{req.currentDueDate}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">New Due</p>
-                            <p className="font-medium">{req.newDueDate}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Extension</p>
-                            <p className="font-medium">14 days</p>
-                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedRenewal(req);
+                              setShowDialog(true);
+                            }}
+                            className="w-full md:w-auto"
+                          >
+                            Review
+                          </Button>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedRenewal(req);
-                          setShowDialog(true);
-                        }}
-                        className="w-full md:w-auto"
-                      >
-                        Review
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
           </>
         )}
 
@@ -232,23 +250,19 @@ export default function RenewalRequestsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Member</p>
-                    <p className="font-semibold">{getMemberName(selectedRenewal.memberId)}</p>
+                    <p className="font-semibold">{getMemberName(selectedRenewal)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Book</p>
-                    <p className="font-semibold">{getBookTitle(selectedRenewal.bookId)}</p>
+                    <p className="font-semibold">{getBookTitle(selectedRenewal)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Current Due Date</p>
-                    <p className="font-semibold">{selectedRenewal.currentDueDate}</p>
+                    <p className="font-semibold">{selectedRenewal.currentDueDate || '—'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">New Due Date</p>
-                    <p className="font-semibold">{selectedRenewal.newDueDate}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-sm text-muted-foreground">Renewals Used</p>
-                    <p className="font-semibold">{selectedRenewal.renewalCount} / 2</p>
+                    <p className="font-semibold">{selectedRenewal.newDueDate || '—'}</p>
                   </div>
                 </div>
 

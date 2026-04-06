@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/library';
@@ -26,23 +26,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
   const [error, setError] = useState('');
+  const [lockWait, setLockWait] = useState(0);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockWait <= 0) return;
+    const t = setInterval(() => setLockWait(w => Math.max(0, w - 1)), 1000);
+    return () => clearInterval(t);
+  }, [lockWait]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (lockWait > 0) return;
 
-    if (!email || !password) {
-      setError('Please enter email and password');
-      return;
-    }
-
-    const success = login(email, password, selectedRole);
-    if (success) {
+    const result = await login(email, password, selectedRole);
+    if (result.success) {
       navigate('/departments');
     } else {
-      setError('Invalid credentials for the selected role');
+      setError(result.error ?? 'Login failed.');
+      if (result.waitSeconds) setLockWait(result.waitSeconds);
     }
   };
 
@@ -132,14 +137,18 @@ export default function LoginPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-11">
-                Sign In
+              <Button type="submit" disabled={lockWait > 0} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold h-11">
+                {lockWait > 0 ? `Try again in ${lockWait}s` : 'Sign In'}
               </Button>
 
               {/* <p className="text-xs text-center text-muted-foreground">
                 Don't have an account?{' '}
                 <span className="text-accent cursor-pointer hover:underline" onClick={() => navigate('/signup')}>Register as Citizen</span>
               </p> */}
+              <p className="text-xs text-center text-muted-foreground">
+                New citizen?{' '}
+                <span className="text-accent cursor-pointer hover:underline" onClick={() => navigate('/signup')}>Register here</span>
+              </p>
             </form>
           </CardContent>
         </Card>

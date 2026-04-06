@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Search, BookOpen, UserCheck, ArrowRight, ArrowLeft, Camera, X } from 'lucide-react';
+import { fmtDate } from '@/lib/formatDate';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -603,7 +604,7 @@ export default function BookCirculationPage() {
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-sm">{transaction.issueDate}</TableCell>
-                                <TableCell className="text-sm">{transaction.dueDate}</TableCell>
+                                <TableCell className="text-sm">{fmtDate(transaction.dueDate)}</TableCell>
                                 <TableCell>
                                   <Badge variant={isOverdue ? 'destructive' : 'secondary'} className="text-xs">
                                     {isOverdue ? 'Overdue' : 'Issued'}
@@ -698,7 +699,7 @@ export default function BookCirculationPage() {
                     <p className="text-sm"><strong>Member:</strong> {member?.name}</p>
                     <p className="text-sm"><strong>Book:</strong> {book?.title}</p>
                     <p className="text-sm"><strong>Issue Date:</strong> {selectedTransaction.issueDate}</p>
-                    <p className="text-sm"><strong>Due Date:</strong> {selectedTransaction.dueDate}</p>
+                    <p className="text-sm"><strong>Due Date:</strong> {fmtDate(selectedTransaction.dueDate)}</p>
                   </div>
                   {isOverdue && (
                     <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4">

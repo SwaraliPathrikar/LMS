@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { checkInRecords, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, History, Calendar } from 'lucide-react';
+import { fmtDateTime } from '@/lib/formatDate';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -11,6 +12,9 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 export default function CitizenHistoryPage() {
   const { user } = useAuth();
   const [dateFilter, setDateFilter] = useState('');
+  const [allRecords, setAllRecords] = useState<any[]>([]);
+
+  useEffect(() => { api.checkIns.list({}).then(setAllRecords).catch(console.error); }, []);
 
   if (!user || user.role !== 'citizen') {
     return (
@@ -29,10 +33,7 @@ export default function CitizenHistoryPage() {
     );
   }
 
-  // Get all check-in records for this citizen
-  const userRecords = useMemo(() => {
-    return checkInRecords.filter(r => r.memberId === user.id);
-  }, [user.id]);
+  const userRecords = useMemo(() => allRecords.filter(r => r.userId === user.id), [allRecords, user.id]);
 
   // Filter by date if selected
   const filteredRecords = useMemo(() => {
@@ -119,7 +120,6 @@ export default function CitizenHistoryPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredRecords.map(record => {
-                      const library = libraryBranches.find(l => l.id === record.libraryId);
                       const checkInTime = new Date(record.checkInTime);
                       const checkOutTime = record.checkOutTime ? new Date(record.checkOutTime) : null;
                       
@@ -133,11 +133,9 @@ export default function CitizenHistoryPage() {
 
                       return (
                         <TableRow key={record.id}>
-                          <TableCell className="font-medium text-sm">{library?.name}</TableCell>
-                          <TableCell className="text-sm">{checkInTime.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
-                          <TableCell className="text-sm">
-                            {checkOutTime ? checkOutTime.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '—'}
-                          </TableCell>
+                          <TableCell className="font-medium text-sm">{record.library?.name ?? '—'}</TableCell>
+                          <TableCell className="text-sm">{fmtDateTime(record.checkInTime)}</TableCell>
+                          <TableCell className="text-sm">{checkOutTime ? fmtDateTime(record.checkOutTime) : '—'}</TableCell>
                           <TableCell className="text-sm">{duration || '—'}</TableCell>
                           <TableCell>
                             <Badge className={checkOutTime ? 'bg-success/15 text-success border-0' : 'bg-warning/15 text-warning border-0'}>

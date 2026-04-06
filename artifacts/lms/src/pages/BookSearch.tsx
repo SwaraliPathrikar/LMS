@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooks } from '@/contexts/BooksContext';
-import { bookInventory, libraryBranches, genres, borrowRequests, members } from '@/data/mockData';
+import { genres } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
+import * as api from '@/lib/api';
 import { Book, IssueType } from '@/types/library';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,12 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, BookOpen, Download, ShoppingCart, Lock, Unlock, MapPin, Package, ArrowLeft, Eye, Send } from 'lucide-react';
+import { Search, BookOpen, Download, ShoppingCart, Lock, Unlock, MapPin, Package, ArrowLeft, Eye, Send, Headphones, Play } from 'lucide-react';
 import AudiobookIcon from '@/components/icons/AudiobookIcon';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { AccessibilityBadge } from '@/components/AccessibilityBadge';
 import { BookCover } from '@/components/BookCover';
 import { toast } from 'sonner';
+import MediaViewer, { MediaType } from '@/components/MediaViewer';
 
 const issueTypeConfig: Record<IssueType, { label: string; icon: React.ElementType; color: string }> = {
   physical: { label: 'Physical Book', icon: BookOpen, color: 'bg-primary text-primary-foreground' },
@@ -39,6 +41,7 @@ export default function BookSearch() {
   const { user } = useAuth();
   const { books } = useBooks();
   const navigate = useNavigate();
+  const [allInventory, setAllInventory] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedResourceType, setSelectedResourceType] = useState<IssueType | null>(null);
@@ -47,12 +50,41 @@ export default function BookSearch() {
   const [showBookDetail, setShowBookDetail] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showRequestForm, setShowRequestForm] = useState(false);
-  const [requestBook, setRequestBook] = useState<Book | null>(null); // holds book for request form independently
+  const [requestBook, setRequestBook] = useState<Book | null>(null);
   const [requestFormData, setRequestFormData] = useState({
     issueType: '',    reason: '',
     purpose: '',
     mobile: '',
   });
+
+  // Media viewer
+  const [viewerOpen, setViewerOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedLibrary) {
+      api.books.list({ libraryId: selectedLibrary, limit: '500' })
+        .then(d => setAllInventory((d.books ?? d).flatMap((b: any) => b.inventory ?? [])))
+        .catch(console.error);
+    }
+  }, [selectedLibrary]);  const [viewerBook, setViewerBook] = useState<Book | null>(null);
+  const [viewerMediaType, setViewerMediaType] = useState<MediaType>('pdf');
+
+  const openBookViewer = (book: Book) => {
+    // Pick the best digital type available
+    const order: IssueType[] = ['pdf', 'audiobook', 'mp4', 'movie', 'e-document', 'article'];
+    const match = order.find(t => book.issueTypes.includes(t));
+    if (!match) return;
+    const typeMap: Partial<Record<IssueType, MediaType>> = {
+      pdf: 'pdf', audiobook: 'audiobook', mp4: 'video', movie: 'video',
+      'e-document': 'e-document', article: 'article',
+    };
+    setViewerBook(book);
+    setViewerMediaType(typeMap[match] ?? 'pdf');
+    setViewerOpen(true);
+  };
+
+  const hasDigitalAccess = (book: Book) =>
+    book.issueTypes.some(t => ['pdf', 'audiobook', 'mp4', 'movie', 'e-document', 'article'].includes(t));
 
   const totalBooks = books.length;
 
@@ -76,7 +108,7 @@ export default function BookSearch() {
   }, [query, selectedGenre, selectedResourceType]);
 
   const getInventory = (bookId: string) =>
-    bookInventory.filter(i => i.bookId === bookId);
+    allInventory.filter((i: any) => i.bookId === bookId);
 
   const handleIssueType = (type: IssueType) => {
     setSelectedIssueType(type);
@@ -97,40 +129,8 @@ export default function BookSearch() {
       toast.error('Only citizens can request books');
       return;
     }
-
-    if (!requestBook || !requestFormData.issueType || !requestFormData.reason || !requestFormData.purpose || !requestFormData.mobile) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    const newRequest = {
-      id: `br${Date.now()}`,
-      userId: user.id,
-      userName: user.name,
-      bookId: requestBook.id,
-      libraryId: selectedLibrary || '',
-      issueType: requestFormData.issueType as IssueType,
-      reason: requestFormData.reason,
-      purpose: requestFormData.purpose,
-      mobile: requestFormData.mobile,
-      email: user.email,
-      requestDate: new Date().toISOString().split('T')[0],
-      status: 'pending' as const,
-      responseDate: null,
-      rejectionReason: null,
-      notificationSent: false,
-    };
-
-    borrowRequests.push(newRequest);
-    toast.success(
-      <div className="flex items-start gap-2">
-        <Send className="w-5 h-5 text-success mt-0.5" />
-        <div>
-          <p className="font-semibold">Request Submitted!</p>
-          <p className="text-sm text-muted-foreground">Your request for "{requestBook.title}" has been sent to the librarian</p>
-        </div>
-      </div>
-    );
+    if (!requestBook) return;
+    navigate(`/borrow-requests?bookId=${requestBook.id}`);
     resetSelection();
   };
 
@@ -287,10 +287,23 @@ export default function BookSearch() {
                   <p className="text-lg font-bold text-warning">₹{selectedBook.cost}</p>
                 </div>
               )}
-              <div className="flex gap-2 pt-4">
+              <div className="flex flex-wrap gap-2 pt-4">
                 <Button onClick={() => setShowBookDetail(false)} variant="outline" className="flex-1">
                   Close
                 </Button>
+                {hasDigitalAccess(selectedBook) && (
+                  <Button
+                    onClick={() => { setShowBookDetail(false); openBookViewer(selectedBook); }}
+                    variant="outline"
+                    className="flex-1 border-accent text-accent hover:bg-accent/10"
+                  >
+                    {selectedBook.issueTypes.includes('audiobook') ? <Headphones size={15} className="mr-1.5" /> :
+                     selectedBook.issueTypes.some(t => ['mp4','movie'].includes(t)) ? <Play size={15} className="mr-1.5" /> :
+                     <Eye size={15} className="mr-1.5" />}
+                    {selectedBook.issueTypes.includes('audiobook') ? 'Listen' :
+                     selectedBook.issueTypes.some(t => ['mp4','movie'].includes(t)) ? 'Watch' : 'Read'} Now
+                  </Button>
+                )}
                 {user?.role === 'citizen' && (
                   <Button onClick={() => {
                     setShowBookDetail(false);
@@ -409,6 +422,23 @@ export default function BookSearch() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── In-app Media Viewer ── */}
+      {viewerBook && (
+        <MediaViewer
+          open={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          title={viewerBook.title}
+          author={viewerBook.author}
+          type={viewerMediaType}
+          url={viewerBook.pdfUrl}
+          canAccess={viewerBook.accessType === 'public'}
+          onRequestAccess={() => {
+            setViewerOpen(false);
+            navigate(`/borrow-requests?bookId=${viewerBook.id}`);
+          }}
+        />
+      )}
     </>
   );
 }

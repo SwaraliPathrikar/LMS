@@ -98,7 +98,7 @@ function CitizenDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/user/borrowed')}>
             <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -110,7 +110,7 @@ function CitizenDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/fees')}>
             <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -618,7 +618,12 @@ function LibrarianDashboard() {
   );
 }
 
+// ============================================================================
+// ADMIN DASHBOARD
+// ============================================================================
+
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [showLibraryDetails, setShowLibraryDetails] = useState(false);
   const [selectedLibraryForDetails, setSelectedLibraryForDetails] = useState<string | null>(null);
   const [selectedMetricType, setSelectedMetricType] = useState<string | null>(null);
@@ -651,7 +656,7 @@ function AdminDashboard() {
             <h1 className="page-header">Municipal Library Dashboard</h1>
             <p className="text-muted-foreground mt-1">City-wide metrics and analytics</p>
           </div>
-          <Card className="shrink-0 border-2 border-accent/30">
+          <Card className="shrink-0 border-2 border-accent/30 cursor-pointer hover:shadow-md transition-all" onClick={() => navigate('/libraries')}>
             <CardContent className="p-3 text-center min-w-[80px]">
               <p className="text-2xl md:text-3xl font-bold text-accent leading-none">{libraryBranches.length}</p>
               <p className="text-xs text-muted-foreground mt-1">Total Libraries</p>
@@ -710,7 +715,7 @@ function AdminDashboard() {
           </Card>
 
           {/* ── Row 3-4: Advanced Analytics ── */}
-          <Card className="stat-card">
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/circulation')}>
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
               <p className="text-xs md:text-sm text-muted-foreground">Overdue Books</p>
               <p className="text-2xl md:text-3xl font-bold text-destructive mt-1">{overdueData.overdue}</p>
@@ -718,7 +723,7 @@ function AdminDashboard() {
             </div></CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/fees')}>
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
               <p className="text-xs md:text-sm text-muted-foreground">Total Fines Issued</p>
               <p className="text-2xl md:text-3xl font-bold text-warning mt-1">₹{finesData.collected + finesData.pending}</p>
@@ -726,7 +731,7 @@ function AdminDashboard() {
             </div></CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/members')}>
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
               <p className="text-xs md:text-sm text-muted-foreground">Active Users</p>
               <p className="text-2xl md:text-3xl font-bold text-info mt-1">{activeUsers.active}</p>
@@ -734,7 +739,7 @@ function AdminDashboard() {
             </div></CardContent>
           </Card>
 
-          <Card className="stat-card">
+          <Card className="stat-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/members/add')}>
             <CardContent className="p-3 md:p-6"><div className="flex flex-col items-center text-center">
               <p className="text-xs md:text-sm text-muted-foreground">New Members</p>
               <p className="text-2xl md:text-3xl font-bold text-success mt-1">{newMembers.thisMonth}</p>
@@ -1076,6 +1081,17 @@ function AdminDashboard() {
                     <p className="text-2xl font-bold text-warning mt-1">{selectedMetrics.utilizationPercentage}%</p>
                   </div>
                 </div>
+                <div className="flex flex-wrap gap-2 pt-2 border-t">
+                  <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => { setShowLibraryDetails(false); navigate('/libraries'); }}>
+                    <ArrowRight size={14} className="mr-1" /> Go to Library Branches
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setShowLibraryDetails(false); navigate('/members'); }}>
+                    View Members
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setShowLibraryDetails(false); navigate('/fees'); }}>
+                    View Fines
+                  </Button>
+                </div>
               </div>
             )}
           </DialogContent>
@@ -1200,6 +1216,7 @@ function AdminPerformanceMetrics() {
 // ============================================================================
 
 function AdminSmartInsights() {
+  const navigate = useNavigate();
   const top5 = useMemo(() => getTop5BorrowedBooks(), []);
   const lowStock = useMemo(() => getLowStockAlerts(), []);
   const peakTime = useMemo(() => getPeakUsageTime(), []);
@@ -1301,13 +1318,18 @@ function AdminSmartInsights() {
 
               <div className={`flex items-start gap-3 p-3 rounded-lg ${alerts.overdue > 0 ? 'bg-destructive/10 border border-destructive/20' : 'bg-success/10 border border-success/20'}`}>
                 <AlertCircle className={`w-4 h-4 mt-0.5 shrink-0 ${alerts.overdue > 0 ? 'text-destructive' : 'text-success'}`} />
-                <div>
+                <div className="flex-1">
                   <p className={`text-sm font-semibold ${alerts.overdue > 0 ? 'text-destructive' : 'text-success'}`}>
                     Overdue Books
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {alerts.overdue > 0 ? `${alerts.overdue} book(s) are overdue` : 'No overdue books'}
                   </p>
+                  {alerts.overdue > 0 && (
+                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-destructive mt-1" onClick={() => navigate('/circulation')}>
+                      View Circulation →
+                    </Button>
+                  )}
                 </div>
                 {alerts.overdue > 0 && (
                   <span className="ml-auto text-xs font-bold text-destructive shrink-0">{alerts.overdue}</span>
@@ -1316,13 +1338,18 @@ function AdminSmartInsights() {
 
               <div className={`flex items-start gap-3 p-3 rounded-lg ${alerts.lowStock > 0 ? 'bg-warning/10 border border-warning/20' : 'bg-success/10 border border-success/20'}`}>
                 <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${alerts.lowStock > 0 ? 'text-warning' : 'text-success'}`} />
-                <div>
+                <div className="flex-1">
                   <p className={`text-sm font-semibold ${alerts.lowStock > 0 ? 'text-warning' : 'text-success'}`}>
                     Low Stock
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {alerts.lowStock > 0 ? `${alerts.lowStock} book title(s) running low` : 'Stock levels are healthy'}
                   </p>
+                  {alerts.lowStock > 0 && (
+                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-warning mt-1" onClick={() => navigate('/resources/management')}>
+                      Manage Resources →
+                    </Button>
+                  )}
                 </div>
                 {alerts.lowStock > 0 && (
                   <span className="ml-auto text-xs font-bold text-warning shrink-0">{alerts.lowStock}</span>
@@ -1331,13 +1358,18 @@ function AdminSmartInsights() {
 
               <div className={`flex items-start gap-3 p-3 rounded-lg ${alerts.pendingReservations > 0 ? 'bg-info/10 border border-info/20' : 'bg-success/10 border border-success/20'}`}>
                 <Bell className={`w-4 h-4 mt-0.5 shrink-0 ${alerts.pendingReservations > 0 ? 'text-info' : 'text-success'}`} />
-                <div>
+                <div className="flex-1">
                   <p className={`text-sm font-semibold ${alerts.pendingReservations > 0 ? 'text-info' : 'text-success'}`}>
                     Pending Requests
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {alerts.pendingReservations > 0 ? `${alerts.pendingReservations} request(s) awaiting approval` : 'No pending requests'}
                   </p>
+                  {alerts.pendingReservations > 0 && (
+                    <Button size="sm" variant="link" className="h-auto p-0 text-xs text-info mt-1" onClick={() => navigate('/admin/requests-approve')}>
+                      Review Requests →
+                    </Button>
+                  )}
                 </div>
                 {alerts.pendingReservations > 0 && (
                   <span className="ml-auto text-xs font-bold text-info shrink-0">{alerts.pendingReservations}</span>

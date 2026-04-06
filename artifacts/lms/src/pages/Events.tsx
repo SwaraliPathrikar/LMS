@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { events, eventRegistrations, members, libraryBranches } from '@/data/mockData';
+import { useState, useEffect, useMemo } from 'react';
+import * as api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,13 +30,20 @@ const categoryColors: Record<string, string> = {
 export default function Events() {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [allLibraries, setAllLibraries] = useState<any[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [showManageDialog, setShowManageDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showParticipantsDialog, setShowParticipantsDialog] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [activeTab, setActiveTab] = useState('browse');
+
+  useEffect(() => {
+    api.events.list().then(setAllEvents).catch(console.error);
+    api.libraries.list().then(setAllLibraries).catch(console.error);
+  }, []);
 
   // Form state for creating/editing events
   const [formData, setFormData] = useState({
@@ -50,72 +57,61 @@ export default function Events() {
   });
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return events;
+    if (!query.trim()) return allEvents;
     const q = query.toLowerCase();
-    return events.filter(e => e.title.toLowerCase().includes(q) || e.description.toLowerCase().includes(q));
-  }, [query]);
+    return allEvents.filter(e => e.title.toLowerCase().includes(q) || e.description.toLowerCase().includes(q));
+  }, [query, allEvents]);
 
-  const getRegistrationStatus = (eventId: string) => {
-    return eventRegistrations.some(er => er.eventId === eventId && er.memberId === user?.id);
-  };
+  const getRegistrationStatus = (_eventId: string) => false; // TODO: track per-user registrations
 
   const getEventParticipants = (eventId: string) => {
-    return eventRegistrations.filter(er => er.eventId === eventId);
+    const ev = allEvents.find(e => e.id === eventId);
+    return ev ? Array(ev.registeredCount ?? 0).fill({}) : [];
   };
 
-  const handleRegister = () => {
-    setIsRegistered(true);
-    setTimeout(() => {
-      setShowRegisterDialog(false);
-      setIsRegistered(false);
-    }, 1500);
+  const handleRegister = async () => {
+    if (!selectedEvent) return;
+    try {
+      await api.events.register(selectedEvent.id);
+      setIsRegistered(true);
+      setAllEvents(prev => prev.map(e => e.id === selectedEvent.id ? { ...e, registeredCount: (e.registeredCount ?? 0) + 1 } : e));
+      setTimeout(() => { setShowRegisterDialog(false); setIsRegistered(false); }, 1500);
+    } catch (e: any) { alert(e.message); }
   };
 
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const openEditDialog = (event: Event) => {
-    setFormData({
-      title: event.title,
-      description: event.description,
-      category: event.category as any,
-      startDate: event.startDate,
-      endDate: event.endDate,
-      location: event.location,
-      capacity: event.capacity,
-    });
+  const openEditDialog = (event: any) => {
+    setFormData({ title: event.title, description: event.description, category: event.category, startDate: event.startDate, endDate: event.endDate, location: event.location, capacity: event.capacity });
     setIsEditMode(true);
     setShowManageDialog(false);
     setShowCreateDialog(true);
   };
 
-  const handleCreateEvent = () => {
-    if (isEditMode && selectedEvent) {
-      // Apply edits to the event in-place
-      const idx = events.findIndex(e => e.id === selectedEvent.id);
-      if (idx !== -1) {
-        events[idx] = {
-          ...events[idx],
-          title: formData.title,
-          description: formData.description,
-          category: formData.category,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          location: formData.location,
-          capacity: formData.capacity,
-        };
+  const handleCreateEvent = async () => {
+    try {
+      if (isEditMode && selectedEvent) {
+        const updated = await api.events.update(selectedEvent.id, formData);
+        setAllEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
+        alert(`Event "${formData.title}" updated!`);
+      } else {
+        const created = await api.events.create({ ...formData, libraryId: allLibraries[0]?.id ?? '' });
+        setAllEvents(prev => [...prev, created]);
+        alert(`Event "${formData.title}" created!`);
       }
-      alert(`Event "${formData.title}" updated successfully!`);
-    } else {
-      alert(`Event "${formData.title}" created successfully!`);
-    }
-    setFormData({ title: '', description: '', category: 'reading', startDate: '', endDate: '', location: '', capacity: 100 });
-    setIsEditMode(false);
-    setShowCreateDialog(false);
+      setFormData({ title: '', description: '', category: 'reading', startDate: '', endDate: '', location: '', capacity: 100 });
+      setIsEditMode(false);
+      setShowCreateDialog(false);
+    } catch (e: any) { alert(e.message); }
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    alert(`Event deleted successfully!`);
-    setShowManageDialog(false);
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await api.events.delete(eventId);
+      setAllEvents(prev => prev.filter(e => e.id !== eventId));
+      alert('Event deleted!');
+      setShowManageDialog(false);
+    } catch (e: any) { alert(e.message); }
   };
 
   const isAdmin = user?.role === 'admin';
@@ -238,14 +234,14 @@ export default function Events() {
               {/* Events Management Cards */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base md:text-lg">All Events ({events.length})</CardTitle>
+                  <CardTitle className="text-base md:text-lg">All Events ({allEvents.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {events.length === 0 ? (
+                    {allEvents.length === 0 ? (
                       <p className="text-muted-foreground text-center py-8">No events found</p>
                     ) : (
-                      events.map(event => {
+                      allEvents.map(event => {
                         const participants = getEventParticipants(event.id);
                         return (
                           <div key={event.id} className="p-4 rounded-lg border hover:bg-secondary/50 transition-colors">
@@ -569,7 +565,7 @@ export default function Events() {
                   className="w-full p-2 border rounded-lg mt-1 text-sm"
                 >
                   <option value="">Select Library</option>
-                  {libraryBranches.map(lib => (
+                  {allLibraries.map(lib => (
                     <option key={lib.id} value={lib.name}>{lib.name}</option>
                   ))}
                 </select>

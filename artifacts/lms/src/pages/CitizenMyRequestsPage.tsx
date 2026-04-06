@@ -1,11 +1,13 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { borrowRequests, books, libraryBranches } from '@/data/mockData';
+import * as api from '@/lib/api';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, XCircle, BookOpen, PlusCircle, AlertCircle } from 'lucide-react';
+import { fmtDate } from '@/lib/formatDate';
 
 const statusConfig = {
   pending:  { label: 'Pending',  icon: Clock,         className: 'bg-warning/20 text-warning border-warning/30' },
@@ -16,16 +18,17 @@ const statusConfig = {
 export default function CitizenMyRequestsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.borrow.list({ limit: '100' }).then(d => setMyRequests(d.requests ?? d)).catch(console.error);
+  }, []);
 
   if (!user) { navigate('/login'); return null; }
   if (user.role !== 'citizen') { navigate('/dashboard'); return null; }
 
-  const myRequests = borrowRequests
-    .filter(r => r.userId === user.id)
-    .sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
-
-  const getBook = (bookId: string) => books.find(b => b.id === bookId);
-  const getLibrary = (libId: string) => libraryBranches.find(l => l.id === libId);
+  const getBook = (req: any) => req.book;
+  const getLibrary = (req: any) => req.library;
 
   return (
     <DashboardLayout>
@@ -75,8 +78,8 @@ export default function CitizenMyRequestsPage() {
         ) : (
           <div className="space-y-3">
             {myRequests.map(req => {
-              const book = getBook(req.bookId);
-              const library = getLibrary(req.libraryId);
+              const book = getBook(req);
+              const library = getLibrary(req);
               const cfg = statusConfig[req.status as keyof typeof statusConfig] ?? statusConfig.pending;
               const Icon = cfg.icon;
               return (
@@ -97,12 +100,12 @@ export default function CitizenMyRequestsPage() {
                           </div>
                           <div>
                             <span className="text-muted-foreground">Requested: </span>
-                            <span>{req.requestDate}</span>
+                            <span>{fmtDate(req.requestDate)}</span>
                           </div>
                           {req.responseDate && (
                             <div>
                               <span className="text-muted-foreground">Response: </span>
-                              <span>{req.responseDate}</span>
+                              <span>{fmtDate(req.responseDate)}</span>
                             </div>
                           )}
                           {req.rejectionReason && (
